@@ -1,0 +1,27 @@
+{
+  "name": "ag-cn",
+  "version": "0.1.5",
+  "description": "A responsive CodeNames implementation.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "consolidate": "",
+    "underscore":"",
+    "express": "4.13.3"
+  },
+  "engines": {
+    "node": "0.12.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/almgong/ag-cn"
+  },
+  "keywords": [
+    "node",
+    "heroku",
+    "express"
+  ],
+  "license": ""
+}

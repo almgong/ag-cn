@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>Scope of Services | Redesign of cetengineering.com</title>
+
+		<!-- stylesheets -->
+		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css" />
+		<link href='https://fonts.googleapis.com/css?family=Cabin:400italic' rel='stylesheet' type='text/css'>
+		<link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="/static/css/animate.css" />
+		<link rel="stylesheet" type="text/css" href="/static/css/site.css" />
+	</head>
+
+	<body>
+		<nav class="navbar main-navigation">
+		  <div class="container-fluid">
+		    <!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+		      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#top-nav" aria-expanded="false">
+		        <span class="sr-only">Toggle navigation</span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </button>
+		      <a class="navbar-brand" href="/"><img alt="brand logo" src="/static/img/logo.gif" height="50" /></a>
+		    </div>
+
+		    <!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="top-nav">
+		      
+		      <ul class="nav navbar-nav navbar-right">
+		        <li><a href="/">Home</a></li>
+		        <li><span class="bt-default-anchor">|</span></li>
+		        <li><a href="/contact">Contact Us</a></li>
+		      </ul>
+		    </div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		</nav>
+
+		<div class="container-fluid main contact-us-main lazy" data-original='/static/img/contact-bg.jpeg'>
+			
+				<div class="row">
+					<div class="contact-container">
+						<div class="text-center"><h2 class="text-shadow">Contact Us</h2></div>
+						<div class="col-sm-6 contact-block-1">
+							<div class="contact-block">
+								<h4><u>By Form:</u></h4>
+								<form class="form">
+									<div class="form-group">
+										<label for="name">Name</label>
+										<input type="text" id="name" class="form-control" placeholder="e.g. Joe Smith" />
+									</div>
+									<div class="form-group">
+										<label for="email">Email</label>
+										<input type="email" class="form-control" id="email" placeholder="your@email.com" />
+									</div>
+									<div class="form-group">
+										<label for="phone">Phone</label>
+										<input type="tel" class="form-control" id="phone" placeholder="111-222-3333" />
+									</div>
+									<p>
+										Preferred contact method:
+									</p>
+									<div class="radio">
+									  <label><input type="radio" name="preference">Phone</label>
+									</div>
+									<div class="radio">
+									  <label><input type="radio" name="preference">Email</label>
+									</div>
+
+									<div class="form-group">
+										<label for="message"> Your message:</label>
+										<textarea class="form-control" id="message" placeholder="Your message here..."></textarea>
+										
+									</div>
+
+									<button type="reset" class="btn btn-default">Clear</button>
+									<button type="submit" class="btn btn-default">Submit</button>
+
+								</form>
+							</div>
+						</div>
+
+						<div class="col-sm-6">
+							<div class="contact-block">
+								<h4><u>Physical Address:</u></h4>
+								<div class="contact-content">
+									<p>
+										CET Engineering, Inc. <br/>
+										100 N. Barranca Ave.<br />
+										7th Floor<br />
+										West Covina, CA 91791
+									</p>
+								</div>
+								<br />
+								<h4><u>Tel. &amp; Email</u></h4>
+								<div class="contact-content">
+									Tel: 626-858-2018<br />
+									Fax: 626-332-8732<br />
+									Email: info@cetengineering.com
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+							
+		</div>
+		<div class="divider"></div>
+		<footer>
+			<div class="container">
+
+				<div class="row text-center">
+					
+						<a href="/">Home</a> | <a href="/services">Scope of Services</a> | <a href="/contact">Contact Us</a>
+					
+				</div><br>
+				<div class="row text-center">
+					
+						Selective icons made by Freepik from www.flaticon.com. Web design and implementation by Allen Gong. 
+					
+				</div>
+				<div class="row text-center">
+					
+						Copyright &copy; CET Engineering, Inc. - All Rights Reserved
+					
+				</div>
+			</div>
+		</footer>
+
+	</body>
+
+	<!-- script at end of page to prevent render blocking -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/jquery.lazyload.min.js"></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$('.lazy').lazyload({
+			effect: 'fadeIn'
+		});
+	});
+	</script>
+</html>
