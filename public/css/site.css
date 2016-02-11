@@ -1,0 +1,53 @@
+@import url(https://fonts.googleapis.com/css?family=Actor);
+/* Site-wide css for ag-cn */
+
+/* fonts */
+html, body {
+	font-family: 'Actor', 'sans-serif';
+	color: #777;
+	-webkit-transition: all 400ms ease-in;
+	-moz-transition: all 400ms ease-in;
+	-ms-transition: all 400ms ease-in;
+	-o-transition: all 400ms ease-in;
+	transition: all 400ms ease-in;
+}
+
+/* color scheme */
+.brand-yellow {
+	color: #e0dd67;
+}
+.brand-blue {
+	color: #67a7e0;
+}
+.brand-red {
+	color: #e0676b;
+}
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, 
+.navbar-default .navbar-nav>.active>a:hover
+{ background-color: #e0dd67; color:white;}
+
+
+/* lobby */
+.room-description {
+	min-height:100px;
+	margin: 15px 0;
+	cursor:pointer;
+}
+.room-description:hover {
+	background-color: #e0dd67;
+}
+
+/* game room */
+#game-room {
+	display:none;
+}
+.game-card {
+	height:100px;
+	padding-top:40px;
+	border: 1px ridge #777;
+	font-size: 18px;
+}
+.game-card:hover {
+	color:white;
+	cursor:pointer;
+}
