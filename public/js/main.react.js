@@ -3,9 +3,6 @@
 **/
 
 var MainReact = (function () {
-
-	var data = [[{"word":"elephant","color":null},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0}],[{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0}],[{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0}],[{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0},{"word":"elephant","color":0}]];
-
 	/******* components *********/
 	var Board = React.createClass({				//entire board for client
 		getInitialState: function() {	//initial state
@@ -16,6 +13,7 @@ var MainReact = (function () {
 				url: this.props.url,
 				cache:false,
 				success:function(d) {
+					console.log("polled for board state");
 					this.setState({data:d});
 				}.bind(this),
 				error:function(xhr, status, err) {
@@ -24,7 +22,12 @@ var MainReact = (function () {
 			});
 		},
 		componentDidMount: function() {	//is called after first render
-			this.getBoardState();
+			var iid = setInterval(this.getBoardState, this.props.pollInterval);
+			this.iid = iid;
+			//this.getBoardState();
+			setTimeout(function() {
+				GameManager.init();
+			}, 3000);
 		},
 		render: function() {
 			var i = 0;
@@ -35,8 +38,10 @@ var MainReact = (function () {
 			});
 
 			return (
-		    	<div className="game-board">
+				<div>
+		    	<div className="game-board text-center">
 		        	{rows}
+		      	</div>
 		      	</div>
     		);
 		}
@@ -52,7 +57,7 @@ var MainReact = (function () {
   				);
   			});
   			return (
-  				<div className="game-row row" id={"row-" + this.props.rowNum}>
+  				<div className="game-row row" data-id={"row-" + this.props.rowNum}>
   					<div className="col-sm-1"></div>{cards}<div className="col-sm-1"></div>
   				</div>
   			);
@@ -62,8 +67,9 @@ var MainReact = (function () {
 
 	var Card = React.createClass({				//an individual card
 		render:function() {
+			var classes = "game-card col-sm-2 team-" + this.props.data.color;
 			return (
-				<div className="game-card col-sm-2" id={"col-" + this.props.colNum}>
+				<div className={classes} data-id={"col-" + this.props.colNum} data-ownder={this.props.data.owner_team}>
 					{this.props.data.word}
 				</div>
 			);
@@ -75,8 +81,8 @@ var MainReact = (function () {
 
   	/* REACT RENDERING */
   	ReactDOM.render(
-  		<Board url="/board/state/test" pollInterval={1500} />,
-  		$('#game-room')[0]
+  		<Board url="/board/state/room-1" pollInterval={2000} />,
+  		$('#game-room-body')[0]
   	);
 
 })();

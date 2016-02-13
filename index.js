@@ -5,6 +5,9 @@ var express = require('express');
 var app = express();
 var path  = require('path');
 var fs = require('fs');
+var bodyParser = require('body-parser');
+var game = require('./lib/game.js');
+var auth = require('./lib/auth/auth.js');
 
 app.set('port', (process.env.PORT || 5000));
 
@@ -18,7 +21,10 @@ var u = require('underscore'); //use 'u' to prevent name conflicts
 app.engine('html', cons.underscore);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, viewPath));
-
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+app.use(bodyParser.json());
 
 /** API for room logic **/
 var room1 = {
@@ -26,7 +32,7 @@ var room1 = {
 	turn: 0,		//binary, 0 is one team, 1 is the other
 	players: [],	//contains array of client side hash ID, only clients with this hash can authorize moves
 	status: 'Open',
-	board:{}
+	board:game.generateBoard()
 };
 var room2 = {
 	numPlayers:0,
@@ -48,13 +54,30 @@ var testRoom = {
 	turn: 0,		//binary, 0 is one team, 1 is the other
 	players: [],	//contains array of client side hash ID, only clients with this hash can authorize moves
 	status: 'Open',
-	board: [		//4x5 board (20 elements total)
-		[{'word':'elephant', 'color': null}, {'word':'elephant', 'color': 0}, {'word':'elephant', 'color': 0}, {'word':'elephant', 'color': 0}, {'word':'elephant', 'color': 0}], 
-		[{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0}], 
-		[{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0}], 
-		[{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0},{'word':'elephant', 'color': 0}]]
+	board: game.generateBoard() //4x5 board
 };
+function getRoom(room) {
+	var info = null;
+	switch(room) {
+		case "room-1":
+			info = room1;
+			break;
+		case "room-2":
+			info = room2;
+			break;
+		case "room-3":
+			info=room3;
+			break;
+		case "test":
+			info = testRoom;
+			break;
+		default:
+			console.log("What???");
+			info = "{'error'}"
 
+	}
+	return info;
+}
 
 app.get('/', function(request, response) {
 
@@ -78,56 +101,46 @@ app.get('/', function(request, response) {
 
 });
 
-/* to get current room information for a given room */
+/* to get current room information for a given room, moreso for debugging */
 app.get('/board/all/:room', function(request, response) {
 
 	//param must be room-1, room-2, room-3
-	var info = null;
-	switch(request.params.room) {
-		case "room-1":
-			info = room1;
-			break;
-		case "room-2":
-			info = room2;
-			break;
-		case "room-3":
-			info=room3;
-			break;
-		default:
-			console.log("What???");
-			info = "{'error'}"
 
-	}
-	response.json(info);
+	response.json(getRoom(request.params.room));
 
 });
 
 //returns the board state (=the state of the cards)
 app.get('/board/state/:room', function(req, res) {
-
-	var info = null;
-	switch(req.params.room) {
-		case "room-1":
-			info = room1.board;
-			break;
-		case "room-2":
-			info = room2.board;
-			break;
-		case "room-3":
-			info = room3.board;
-			break;
-		case "test":
-			info = testRoom.board;
-			break;
-		default:
-			console.log("What???");
-			info = "{'error'}"
-
-	}
-	res.json(info);
+	
+	res.json(getRoom(req.params.room).board);
 
 });
 
+//resets the board for the given room, must be sent by a user in room, change to post
+app.get('/board/refresh/:room', function(req, res) {
+	console.log(req.params.room)
+	var room = getRoom(req.params.room);
+	console.log(room)
+	room.board = game.generateBoard();
+	res.send("ok");
+
+});
+
+app.post('/commit/turn', function(req, res) {
+	//commit a turn
+	
+	var room = getRoom(req.body.room);
+	
+	if(!auth.authenticate(room, req.body.user || req.body.updates.length==0)) {
+		res.send("ok");	
+		return;	//don't update board, invalid user
+	}
+
+	room.board = game.updateBoard(room.board, req.body.updates, req.body.team);
+	res.send("ok");
+
+});
 
 //return a test room for testing purposes
 app.get('/test', function(req, res) {

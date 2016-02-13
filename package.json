@@ -9,7 +9,8 @@
   "dependencies": {
     "consolidate": "",
     "underscore":"",
-    "express": "4.13.3"
+    "express": "4.13.3",
+    "body-parser":""
   },
   "engines": {
     "node": "0.12.7"

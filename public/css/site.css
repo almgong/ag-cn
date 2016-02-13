@@ -48,6 +48,25 @@ html, body {
 	font-size: 18px;
 }
 .game-card:hover {
-	color:white;
+	color:#e0dd67;
 	cursor:pointer;
+}
+#game-room .btn {
+	background-color: #e0dd67;
+	color:red;
+	margin:0 0 15px 0;
+	font-weight: bold;
+}
+#game-room .choose-team-btn {
+	color:white;
+}
+.team-0, #game-room #choose-team-0 {
+	background-color: #67a7e0; /*blue*/
+}
+.team-1, #game-room #choose-team-1 {
+	background-color: #e0676b; /*red*/
+}
+.team-null {
+	background-color: #777;
+	color:white;
 }

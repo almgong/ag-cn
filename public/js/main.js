@@ -11,26 +11,17 @@ loader.stop = function() {
 	//stop loading animation(s)
 };
 
-
-var gameManager = {};	//acts as the CLIENT side manager for a current game
-gameManager.player = null;
-gameManager.generateUserHash = function() {
-	//generate a unique id for this client
-};
-gameManager.setPlayer = function() {
-	//set player (0 or 1)
-};
-
-
-
 var bindEvents = function() {
 	//bind events (click, hover, etc)
 	var $roomBox = $('.room-description');
 	$roomBox.on('click', function() {
-		console.log('el/')
 		$('#lobby').css('display', 'none'); //should have a loader
 		$('#game-room').fadeIn();
+		GameManager.setRoom($(this).attr('id'));
 	});
+
+	//bind tootltips, if any
+	$('.tooltipster').tooltipster();
 };
 
 
@@ -38,6 +29,6 @@ var bindEvents = function() {
 
 //scripts to run after the page has finished loading
 $(function() {
-	console.log("ready");
+	console.log("Ready.");
 	bindEvents();
 });
