@@ -69,7 +69,7 @@ var MainReact = (function () {
 		render:function() {
 			var classes = "game-card col-sm-2 team-" + this.props.data.color;
 			return (
-				<div className={classes} data-id={"col-" + this.props.colNum} data-ownder={this.props.data.owner_team}>
+				<div className={classes} data-id={"col-" + this.props.colNum} data-owner={this.props.data.owner_team}>
 					{this.props.data.word}
 				</div>
 			);

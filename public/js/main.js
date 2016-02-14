@@ -17,14 +17,13 @@ var bindEvents = function() {
 	$roomBox.on('click', function() {
 		$('#lobby').css('display', 'none'); //should have a loader
 		$('#game-room').fadeIn();
+		console.log($(this).attr('id'))
 		GameManager.setRoom($(this).attr('id'));
 	});
 
 	//bind tootltips, if any
 	$('.tooltipster').tooltipster();
 };
-
-
 
 
 //scripts to run after the page has finished loading

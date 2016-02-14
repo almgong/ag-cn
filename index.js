@@ -38,14 +38,14 @@ var room2 = {
 	numPlayers:0,
 	turn: 0,		//binary, 0 is one team, 1 is the other
 	players: [],	//contains array of client side hash ID, only clients with this hash can authorize moves
-	status: 'Open',
+	status: 'Closed',
 	board:{}
 };
 var room3 = {
 	numPlayers:0,
 	turn: 0,		//binary, 0 is one team, 1 is the other
 	players: [],	//contains array of client side hash ID, only clients with this hash can authorize moves
-	status: 'Open',
+	status: 'Closed',
 	board:{}
 };
 
@@ -119,9 +119,7 @@ app.get('/board/state/:room', function(req, res) {
 
 //resets the board for the given room, must be sent by a user in room, change to post
 app.get('/board/refresh/:room', function(req, res) {
-	console.log(req.params.room)
 	var room = getRoom(req.params.room);
-	console.log(room)
 	room.board = game.generateBoard();
 	res.send("ok");
 

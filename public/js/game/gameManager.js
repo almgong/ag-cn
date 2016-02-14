@@ -54,6 +54,14 @@ var GameManager = (function() {
 
 		gameManager.generateUserHash();		//set unique id for this user, only called once
 
+		//when a card is clicked
+		$('.game-card').on('click', function() {
+			$(this).toggleClass('team-' + gameManager.team).toggleClass('updated');
+		});
+
+
+		//button events//
+
 		//bind a refresh on board
 		$('#reset-board').on('click', function() {
 			$.ajax({
@@ -66,13 +74,6 @@ var GameManager = (function() {
 				}
 			});
 		});
-
-		//when a card is clicked
-		$('.game-card').on('click', function() {
-			console.log('clicked on game card')
-			$(this).toggleClass('team-' + gameManager.team).toggleClass('updated');
-		});
-
 		//when end turn is clicked
 		$('#end-turn').on('click', function() {
 			var $updated = $('.updated');	//all updated elements this turn
@@ -83,6 +84,17 @@ var GameManager = (function() {
 
 			ApiClient.commitTurn(gameManager.updatesThisTurn, gameManager.room, 
 				gameManager.userHash, gameManager.team);
+		});
+		//spymaster button clicked, reveal answers
+		$('#spymaster-btn').on('click', function() {
+			var $cards = $('.game-card');
+			var owner, word;
+			$cards.each(function(i) {
+				word = $(this).text();
+				owner = $(this).attr('data-owner');
+				$(this).html("<div class='spymaster-outline team-" + owner + 
+					"'>" + word + "</div>");
+			});
 		});
 	}
 
