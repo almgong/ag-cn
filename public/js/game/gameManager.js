@@ -42,6 +42,7 @@ var GameManager = (function() {
 	gameManager.reset = function() {
 		//resets client state
 		gameManager.setPlayer(null);
+		gameManager.updatesThisTurn = [];
 		$('div.game-card').removeClass('team-0 team-1 updated');
 		$('.choose-team-btn').removeClass('disabled');
 		if(gameManager.intervalID)
