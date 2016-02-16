@@ -139,6 +139,9 @@ html, body {
 .team-1, #game-room #choose-team-1 {
 	background-color: #e0676b; /*red*/
 }
+.team-2 {
+  background-color: #e0dd67;
+}
 .team-null, .team-none {
 	background-color: #777;
 	color:white;
