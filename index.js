@@ -129,8 +129,8 @@ app.post('/commit/turn', function(req, res) {
 	//commit a turn
 	
 	var room = getRoom(req.body.room);
-	
-	if(!auth.authenticate(room, req.body.user || req.body.updates.length==0)) {
+	if(!auth.authenticate(room, req.body.user) || req.body.updates==undefined 
+		||req.body.updates.length==0) {
 		res.send("ok");	
 		return;	//don't update board, invalid user
 	}
