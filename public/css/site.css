@@ -113,6 +113,7 @@ html, body {
 /* game room */
 #game-room {
 	display:none;
+  margin-bottom:15px;
 }
 .game-card {
 	height:100px;
