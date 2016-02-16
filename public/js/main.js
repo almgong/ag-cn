@@ -16,9 +16,9 @@ var bindEvents = function() {
 	var $roomBox = $('.room-description');
 	$roomBox.on('click', function() {
 		$('#lobby').css('display', 'none'); //should have a loader
-		$('#game-room').fadeIn();
-		console.log($(this).attr('id'))
+		$('#loading-animation').css('display', 'block');
 		GameManager.setRoom($(this).attr('id'));
+
 	});
 
 	//bind tootltips, if any
@@ -30,4 +30,5 @@ var bindEvents = function() {
 $(function() {
 	console.log("Ready.");
 	bindEvents();
+	$('#loading-animation').fadeOut(1000);
 });

@@ -12,7 +12,6 @@ var ApiClient = (function() {
 			user:userHash,
 			team: team
 		};
-		console.log(JSON.stringify(turnData));
 		$.ajax({
 			url:'/commit/turn',
 			method:'POST',

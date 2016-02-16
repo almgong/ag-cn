@@ -1,7 +1,6 @@
 /**
  * All react.js code needed to define components and functionality
 **/
-
 var MainReact = (function () {
 	/******* components *********/
 	var Board = React.createClass({				//entire board for client
@@ -24,9 +23,11 @@ var MainReact = (function () {
 		componentDidMount: function() {	//is called after first render
 			var iid = setInterval(this.getBoardState, this.props.pollInterval);
 			this.iid = iid;
+			$('#game-room').fadeIn();
 			//this.getBoardState();
 			setTimeout(function() {
 				GameManager.init();
+				$('#loading-animation').fadeOut(400);
 			}, 3000);
 		},
 		render: function() {
@@ -80,9 +81,47 @@ var MainReact = (function () {
 
 
   	/* REACT RENDERING */
-  	ReactDOM.render(
+  	/**	ReactDOM.render(
   		<Board url="/board/state/room-1" pollInterval={2000} />,
   		$('#game-room-body')[0]
-  	);
+  	);**/
+
+
+
+	/**
+	 * Represents an OOP class for contructing and destroying generic react.js 
+	 * elements
+	**/
+	"use strict";
+	class ReactObject {
+
+	  constructor(url, container) {
+	    this._container = container;
+	    this._url = url;
+	    this._render();
+	  }
+
+	  _render() {
+	    ReactDOM.render(
+	      <Board url={this._url} pollInterval={2000} />,
+	      this._container
+	    );
+	  }
+
+	  get url() {
+	    return this._url;
+	  }
+
+	  set url(value) {
+	    this._url = value;
+	    this._render();
+	  }
+
+	  destroy() {
+	    ReactDOM.unmountComponentAtNode(this._container);
+	  }
+	}
+
+	window.ReactObject = ReactObject;
 
 })();

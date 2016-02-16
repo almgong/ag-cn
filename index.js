@@ -38,15 +38,15 @@ var room2 = {
 	numPlayers:0,
 	turn: 0,		//binary, 0 is one team, 1 is the other
 	players: [],	//contains array of client side hash ID, only clients with this hash can authorize moves
-	status: 'Closed',
-	board:{}
+	status: 'Open',
+	board:game.generateBoard()
 };
 var room3 = {
 	numPlayers:0,
 	turn: 0,		//binary, 0 is one team, 1 is the other
 	players: [],	//contains array of client side hash ID, only clients with this hash can authorize moves
-	status: 'Closed',
-	board:{}
+	status: 'Open',
+	board:game.generateBoard()
 };
 
 var testRoom = {

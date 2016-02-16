@@ -27,6 +27,7 @@ var GameManager = (function() {
 	gameManager.userHash = null;	//unique hash for user
 	gameManager.updatesThisTurn=[];
 	gameManager.room = null;
+	gameManager.currentRoom = null;	//a ReactObject instance, see window.ReactObject
 	gameManager.generateUserHash = function() {
 		//generate a unique id for this client
 		gameManager.userHash = hashCode("" + gameManager.team + Date.now());
@@ -38,6 +39,7 @@ var GameManager = (function() {
 	};
 	gameManager.setRoom = function(roomID) {
 		gameManager.room = roomID;
+		gameManager.enterRoom();	//register entry into the room
 	};
 	gameManager.reset = function() {
 		//resets client state
@@ -50,9 +52,17 @@ var GameManager = (function() {
 		gameManager.userHash = gameManager.generateUserHash();
 
 	};
+	gameManager.enterRoom = function() {
+		if(gameManager.currentRoom)
+			gameManager.currentRoom.destroy();	//destroy any resources from previous room, if any
+
+		gameManager.currentRoom = new window.ReactObject("/board/state/"+gameManager.room,
+		 $('#game-room-body')[0]);
+
+		//api code to register user into the room server-wise TODO
+	};
 	gameManager.bindEvents = function() {
 		//binds any game related events
-
 		gameManager.generateUserHash();		//set unique id for this user, only called once
 
 		//when a card is clicked

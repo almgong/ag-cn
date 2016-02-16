@@ -60,7 +60,7 @@
 
 				<div class="row room-description" id="room-2">
 					<div class="col-sm-4">
-						<h4>Room 2 <span class="alert alert-danger">Coming soon!</span></h4>
+						<h4>Room 2</h4>
 					</div>
 					<div class="col-sm-8">
 						Info:
@@ -73,7 +73,7 @@
 
 				<div class="row room-description" id="room-3">
 					<div class="col-sm-4">
-						<h4>Room 3 <span class="alert alert-danger">Coming soon!</span></h4>
+						<h4>Room 3</h4>
 					</div>
 					<div class="col-sm-8">
 						Info:
@@ -87,7 +87,6 @@
 		</div>
 
 		<div class="container-fluid" id="game-room">
-			<!-- filled by react -->
 			<div class="container">
 				<button class="btn tooltipster" title="Careful! This will reset the board for everyone!!" id="reset-board">New Game</button>
 				<button class="btn choose-team-btn" id="choose-team-0" onClick="GameManager.setTeam(0);$('.choose-team-btn').addClass('disabled');">
@@ -99,6 +98,7 @@
 				<button class="btn" id="end-turn">End Turn</button>
 				<button class="btn pull-right tooltipster" id="spymaster-btn" title="Reveals answers! With great power comes great responsibility.">I am SpyMaster</button>
 			</div>
+			<!-- filled by react -->
 			<div id="game-room-body">
 			</div>
 		</div>
@@ -106,7 +106,20 @@
 		<div class="container-fluid" id="overlay">
 
 		</div>
-
+		<!-- global loading animation -->
+		<div id="loading-animation">
+			<div class="sk-cube-grid">
+			  <div class="sk-cube sk-cube1"></div>
+			  <div class="sk-cube sk-cube2"></div>
+			  <div class="sk-cube sk-cube3"></div>
+			  <div class="sk-cube sk-cube4"></div>
+			  <div class="sk-cube sk-cube5"></div>
+			  <div class="sk-cube sk-cube6"></div>
+			  <div class="sk-cube sk-cube7"></div>
+			  <div class="sk-cube sk-cube8"></div>
+			  <div class="sk-cube sk-cube9"></div>
+			</div>
+		</div>
 	</body>
 
 	<!-- script -->
@@ -116,11 +129,11 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script type="text/babel" src="/static/js/main.react.js" ></script>
     <script type="text/javascript" src="/static/js/api/api.js"></script>
     <script type="text/javascript" src="/static/js/game/gameManager.js"></script>
 
     <!-- Scripts that usually run after load -->
-    <script type="text/babel" src="/static/js/main.react.js" ></script>
 	<script type="text/javascript" src="/static/js/main.js"></script>
 
 </html>
