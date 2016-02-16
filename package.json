@@ -10,7 +10,8 @@
     "consolidate": "",
     "underscore":"",
     "express": "4.13.3",
-    "body-parser":""
+    "body-parser":"",
+    "seedrandom":""
   },
   "engines": {
     "node": "0.12.7"

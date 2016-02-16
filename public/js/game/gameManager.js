@@ -87,14 +87,23 @@ var GameManager = (function() {
 		});
 		//when end turn is clicked
 		$('#end-turn').on('click', function() {
-			var $updated = $('.updated');	//all updated elements this turn
+			var $updated = $('.updated');	//all updated elements this turn, note .updated class is auto-removed by react rendering
 			$(this).addClass('disabled').text('loading...');
 			$.each($updated, function(i, ele) {
 				gameManager.updatesThisTurn.push(getRowCol(ele));
 			});
-
+			var cb = function() {	//callback
+				gameManager.updatesThisTurn = []; //clear current turn updates
+				$.each($updated, function(i, ele) {
+					//for each updated card this turn, reveal spymaster solution
+					var text = $(ele).text();
+					$(ele).html("<div class='spymaster-outline team-"+ 
+						$(ele).attr('data-owner') + "'>" + text + "</div>");
+				});
+			};
+			
 			ApiClient.commitTurn(gameManager.updatesThisTurn, gameManager.room, 
-				gameManager.userHash, gameManager.team);
+				gameManager.userHash, gameManager.team, cb);
 		});
 		//spymaster button clicked, reveal answers
 		$('#spymaster-btn').on('click', function() {

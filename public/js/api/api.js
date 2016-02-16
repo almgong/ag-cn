@@ -4,7 +4,7 @@ var ApiClient = (function() {
 
 	var api = {};
 
-	api.commitTurn = function(updatesArr, roomID, userHash, team) {
+	api.commitTurn = function(updatesArr, roomID, userHash, team, next) {
 		//tells server that the user has committed his turn and should update
 		var turnData = {
 			updates: updatesArr,
@@ -19,6 +19,7 @@ var ApiClient = (function() {
 			success:function(d) {
 				console.log("success commit");
 				$('#end-turn').removeClass('disabled').text('End Turn');
+				next();
 			},
 			error:function() {
 				console.log("Error in commit");
