@@ -10,6 +10,7 @@
 		<link rel="stylesheet" type="text/css" href="/static/css/animate.css" />
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tooltipster/3.3.0/css/tooltipster.min.css" />
 		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
 		<link rel="stylesheet" type="text/css" href="/static/css/site.css" />
 
 		<style>
@@ -19,6 +20,9 @@
 				overflow: scroll;
 				padding: 15px;
 				margin-bottom:15px;
+			}
+			#dice-rolling-animation {
+				display: none;
 			}
 		</style>
 	</head>
@@ -56,9 +60,16 @@
 						<hr>
 						<div>
 							<form id="dice-form">
-								<label class="" for="dice-input">Enter dice type (e.g. 3d4, 1d8, 1d10, 1d20...) </label>
-								<input id="dice-input" class="form-control" type="text" />
-								<input type="submit" value="Roll" />
+								<div class="form-group">
+									<label class="" for="dice-input">Enter dice type (e.g. 3d4, 1d8, 1d10, 1d20...) </label>
+									<input id="dice-input" class="form-control" type="text" />
+								</div>
+
+								<div class="form-group">
+									<input type="submit" value="Roll" />
+									<i id="dice-rolling-animation" class="fa fa-cog fa-spin"></i>
+								</div>
+
 							</form>
 						</div>
 						<hr />
@@ -138,6 +149,7 @@
 				var $diceValue = $('#dice-value');
 				var $personalNotes = $('#personal-notes');
 				var $chatName = $('#chat-box-name');
+				var $diceAnimation = $('#dice-rolling-animation');
 
 				var api = {
 					updateTeamChat:function(msgStr) {
@@ -163,7 +175,6 @@
 					},
 					getTeamChat:function() {
 						// GET /dnd/chat
-
 						$.ajax({
 							url:"/dnd/chat/"+ lastMessageIndex,
 							method:"GET",
@@ -177,14 +188,13 @@
 					},
 					updateDice:function(d) {
 						// POST /dnd/dice
-
 						$.ajax({
 							url:"/dnd/dice",
 							method: "POST",
 							data:d,
 							success:function(d) {
 								console.log("udated dice value to origin");
-								// note we do not update UI here. Leave it to getDice()'s next iteration
+								//$diceAnimation.css("display", "none");
 							},
 							error:function() {
 								console.log("unable to update dice roll value.");
@@ -193,7 +203,6 @@
 					},
 					getDice:function() {
 						// GET /dnd/dice
-
 						$.ajax({
 							url:"/dnd/dice",
 							method:"GET",
@@ -204,6 +213,23 @@
 							},
 							error:function() {
 								console.log("Could not get dice, Disconnect?");
+							}
+						});
+					},
+					getDiceAndChat:function() {
+						// GET /dnd/dice-and-chat
+						$.ajax({
+							url:"/dnd/dice-and-chat/" + lastMessageIndex,
+							method: "GET",
+							success:function(d) {
+								// update UI
+								updateDiceUI(d.dice);
+								updateTeamChatUI(d.chatMessages);
+								
+								$diceAnimation.css("display", "none");
+							},
+							error:function() {
+								console.log("unable to get dice and chat.");
 							}
 						});
 					}
@@ -240,14 +266,16 @@
 
 				var start = function() {
 					// really just a matter of setting timeouts
-					setInterval(function() {
-						console.log("eyy")
-						api.getTeamChat();
-					}, 750);	
+					// setInterval(function() {
+					// 	api.getTeamChat();
+					// }, 750);	
 
-					setInterval(function() {
-						api.getDice();
-					}, 1000);
+					// setInterval(function() {
+					// 	api.getDice();
+					// }, 1000);
+
+					// NEW used a coupled endpoint for both chat and dice
+					setInterval(api.getDiceAndChat, 1000);
 
 					setInterval(function() {
 						saveLocalState();
@@ -277,6 +305,8 @@
 			gameManager.start();
 			$('#dice-form').on("submit", function(e) {
 				e.preventDefault();
+
+				$('#dice-rolling-animation').css("display", "inline-block");
 
 				var diceTypeRaw = $('#dice-input').val();
 				var diceType = diceTypeRaw.split("d");

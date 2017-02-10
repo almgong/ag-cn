@@ -96,6 +96,16 @@ app.post('/dnd/dice', function(req, res) {
 });
 
 
+// coupled endpoint to reduce number of requests for chat+dice
+app.get('/dnd/dice-and-chat/:chat_offset', function(req, res) {
+	var respObj = {};
+	respObj.dice = dice;
+	respObj.chatMessages = chat.slice(req.params.chat_offset, chat.length);
+	
+	res.json(respObj);
+});
+
+
 
 /** CodeNames **/
 
