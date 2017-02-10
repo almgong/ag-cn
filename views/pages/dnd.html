@@ -259,6 +259,8 @@
 						notes = notes.replace(/\r\n?|\\n/g, '<br />');
 						$personalNotes.val(notes);
 					}
+
+					$chatName.val(storage.get("name"));
 				};
 
 				return {
