@@ -56,7 +56,7 @@
 						<hr>
 						<div>
 							<form id="dice-form">
-								<label class="" for="dice-input">Enter dice type (e.g. 8, 10, 20...) </label>
+								<label class="" for="dice-input">Enter dice type (e.g. 3d4, 1d8, 1d10, 1d20...) </label>
 								<input id="dice-input" class="form-control" type="text" />
 								<input type="submit" value="Roll" />
 							</form>
@@ -73,12 +73,11 @@
 						<div id="chat-box" class="dnd-text-box"></div>
 						<div>
 							<form id="chat-box-form">
-								<!--
+								
 								<div class="form-group">
 									<label for="chat-box-name" class="disabled">Your name: &nbsp;&nbsp;&nbsp;</label>
 									<input type="text" id="chat-box-name" />
 								</div>
-								-->
 								
 								<div class="form-group">
 									<label for="chat-box-text">Write to board: &nbsp;&nbsp;&nbsp;</label>
@@ -235,8 +234,8 @@
 					storage.store("name", $chatName.val());
 				}
 
-				var rollDice = function(type) {
-					return Math.floor(Math.random()*type);
+				var rollDice = function(max) {
+					return 1+Math.floor(Math.random()*(max-1));
 				};
 
 				var start = function() {
@@ -244,7 +243,7 @@
 					setInterval(function() {
 						console.log("eyy")
 						api.getTeamChat();
-					}, 1000);	
+					}, 750);	
 
 					setInterval(function() {
 						api.getDice();
@@ -293,6 +292,9 @@
 			$('#chat-box-form').on("submit", function(e) {
 				e.preventDefault();
 				var msgStr = $('#chat-box-text').val();
+				var name = ($('#chat-box-name').val())? $('#chat-box-name').val() : "anon.";
+
+				msgStr = "(" + name + ") " + msgStr;
 				gameManager.updateTeamChat(msgStr);
 			});
 

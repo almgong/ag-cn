@@ -74,7 +74,8 @@ app.post('/dnd/chat', function(req, res) {
 		for (var i = chat.length-1; i >=0; i--) {
 			if (req.body.messageTimestamp > chat[i].messageTimestamp) {
 				// this is where it belongs
-				chat.splice(i+1, 0, req.body);
+				//chat.splice(i+1, 0, req.body);	// this is with reordering
+				chat.push(req.body);				// tina's laptop has wrong time @@@@@@
 				break;
 			}
 		}
