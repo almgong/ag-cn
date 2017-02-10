@@ -2,9 +2,8 @@
 
 <html>
 	<head>
-		<title>CodeNames | ag-cn</title>
-		<!-- meta -->
-		<meta name="description" content="A sophisticated implementation of the board game CodeNames."/>
+		<title>AG Games | ag-cn</title>
+		<meta charset="utf-8" />
 
 		<!-- styles -->
 		<link href='https://fonts.googleapis.com/css?family=Actor' rel='stylesheet' type='text/css'>
@@ -13,7 +12,6 @@
 		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css" />
 		<link rel="stylesheet" type="text/css" href="/static/css/site.css" />
 	</head>
-
 	<body>
 		<!-- top nav -->
 		<nav class="navbar navbar-default">
@@ -26,7 +24,7 @@
 		        <span class="icon-bar"></span>
 		      </button>
 		      <a class="navbar-brand" href="/">
-		        <span class="brand-blue">Code</span><span class="brand-red">Names</span>
+		        <span class="brand-blue">AG</span>-<span class="brand-red">Games</span>
 		      </a>
 		    </div>
 
@@ -34,106 +32,26 @@
 		    <div class="collapse navbar-collapse" id="nav-dropdown">
 		    	<ul class="nav navbar-nav navbar-right">
 			        <li class="active"><a href="/">Home <span class="sr-only">(current)</span></a></li>
-			        <li><a href="/about">About CodeNames</a></li>	        
 			      </ul>
 		    </div>
-
 		  </div>
 		</nav>
 
-		<!-- content bodies, only one should be active at a time, excl overlay -->
-		<div class="container-fluid" id="lobby">
-			<div class="container">
-				<h3>Available rooms (3)</h3>
-				<div class="row room-description" id="room-1">
-					<div class="col-sm-4">
-						<h4>Room 1</h4>
-					</div>
-					<div class="col-sm-8">
-						Info:
-						<ul>
-							<li>Status: <%=r1Status%></li>
-							<li>Num Players: (<%=r1NumPlayers%>)</li>
-						</ul>
-					</div>
-				</div>
-
-				<div class="row room-description" id="room-2">
-					<div class="col-sm-4">
-						<h4>Room 2</h4>
-					</div>
-					<div class="col-sm-8">
-						Info:
-						<ul>
-							<li>Status: <%=r2Status%></li>
-							<li>Num Players: (<%=r2NumPlayers%>)</li>
-						</ul>
-					</div>
-				</div>
-
-				<div class="row room-description" id="room-3">
-					<div class="col-sm-4">
-						<h4>Room 3</h4>
-					</div>
-					<div class="col-sm-8">
-						Info:
-						<ul>
-							<li>Status: <%=r3Status%></li>
-							<li>Num Players: (<%=r3NumPlayers%>)</li>
-						</ul>
-					</div>
+		<!-- main content -->
+		<div class="container">
+			<h3>Current games:</h3>
+			<div class="row">
+				<div class="col-sm-6">
+					<ul class="list-group">
+						<li class="list-group-item"><a href="/codenames">CodeNames</a></li>
+						<li class="list-group-item"><a href="/dnd">Dungeons and Dragons</a></li>
+					</ul>
 				</div>
 			</div>
 		</div>
 
-		<div class="container-fluid" id="game-room">
-			<div class="container">
-				<button class="btn tooltipster" title="Careful! This will reset the board for everyone!!" id="reset-board">New Game</button>
-				<button class="btn choose-team-btn" id="choose-team-0" onClick="GameManager.setTeam(0);$('.choose-team-btn').addClass('disabled');">
-					Blue Team
-				</button>
-				<button class="btn choose-team-btn" id="choose-team-1" onClick="GameManager.setTeam(1);$('.choose-team-btn').addClass('disabled');">
-					Red Team
-				</button>
-				<button class="btn" id="end-turn">End Turn</button>
-				<button class="btn pull-right tooltipster" id="spymaster-btn" title="Reveals answers! With great power comes great responsibility.">I am SpyMaster</button>
-			</div>
-			<!-- filled by react -->
-			<div id="game-room-body">
-			</div>
-		</div>
-
-		<div class="container-fluid" id="overlay">
-
-		</div>
-		<!-- global loading animation -->
-		<div id="loading-animation">
-			<div class="sk-cube-grid">
-			  <div class="sk-cube sk-cube1"></div>
-			  <div class="sk-cube sk-cube2"></div>
-			  <div class="sk-cube sk-cube3"></div>
-			  <div class="sk-cube sk-cube4"></div>
-			  <div class="sk-cube sk-cube5"></div>
-			  <div class="sk-cube sk-cube6"></div>
-			  <div class="sk-cube sk-cube7"></div>
-			  <div class="sk-cube sk-cube8"></div>
-			  <div class="sk-cube sk-cube9"></div>
-			</div>
-		</div>
+		<!-- script -->
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+		<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
 	</body>
-
-	<!-- script -->
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-	<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tooltipster/3.3.0/js/jquery.tooltipster.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script type="text/babel" src="/static/js/main.react.js" ></script>
-    <script type="text/javascript" src="/static/js/api/api.js"></script>
-    <script type="text/javascript" src="/static/js/game/gameManager.js"></script>
-
-    <!-- Scripts that usually run after load -->
-	<script type="text/javascript" src="/static/js/main.js"></script>
-
 </html>

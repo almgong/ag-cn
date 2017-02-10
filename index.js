@@ -26,6 +26,78 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
+
+app.get('/', function(request, response) {
+
+	//set up underscore, though for now we won't use it
+	fs.readFile('./views/pages/index.html',{encoding: 'utf-8'}, function(err, html) {
+		if(err) {
+			throw err;
+		}
+
+		response.send(html);
+	});
+});
+
+
+/** DnD **/
+
+var chat = [];	// list of chat items (each should be an object with string + time)
+var dice = {};	// {rollValue:x, diceType:[4,8,10,20...]}
+
+app.get('/dnd', function(request, response) {
+
+	//set up underscore, though for now we won't use it
+	fs.readFile('./views/pages/dnd.html',{encoding: 'utf-8'}, function(err, html) {
+		if(err) {
+			throw err;
+		}
+
+		response.send(html);
+	});
+});
+
+app.get('/test2', function(req, res) {
+	res.json(chat);
+});
+
+// chat
+app.get('/dnd/chat/:offset', function(request, response) {
+	response.json(chat.slice(request.params.offset, chat.length));	// send relevant part of chat
+});
+
+app.post('/dnd/chat', function(req, res) {
+	if (chat.length == 0) {
+		chat.push(req.body);
+	} else {
+		// iteratively look at array to find the correct spot
+		for (var i = chat.length-1; i >=0; i--) {
+			if (req.body.messageTimestamp > chat[i].messageTimestamp) {
+				// this is where it belongs
+				chat.splice(i+1, 0, req.body);
+				break;
+			}
+		}
+	}
+
+	res.send("OK");
+});
+
+// dice related
+app.get('/dnd/dice', function(request, response) {
+	// users will roll dice themselves, and this call is for everyone to grab the result
+	response.json(dice);
+});
+
+app.post('/dnd/dice', function(req, res) {
+	// expcets {diceType:x, rollValue:x} 
+	dice = req.body;
+});
+
+
+
+/** CodeNames **/
+
 /** API for room logic **/
 var room1 = {
 	numPlayers:0,
@@ -56,6 +128,7 @@ var testRoom = {
 	status: 'Open',
 	board: game.generateBoard() //4x5 board
 };
+
 function getRoom(room) {
 	var info = null;
 	switch(room) {
@@ -79,10 +152,10 @@ function getRoom(room) {
 	return info;
 }
 
-app.get('/', function(request, response) {
+app.get('/codenames', function(request, response) {
 
 	//set up underscore, though for now we won't use it
-	fs.readFile('./views/pages/index.html',{encoding: 'utf-8'}, function(err, html) {
+	fs.readFile('./views/pages/codenames.html',{encoding: 'utf-8'}, function(err, html) {
 		if(err) {
 			throw err;
 		}

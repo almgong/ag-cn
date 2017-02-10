@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>AG Games | ag-cn</title>
+		<meta charset="utf-8" />
+
+		<!-- styles -->
+		<link href='https://fonts.googleapis.com/css?family=Actor' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="/static/css/animate.css" />
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tooltipster/3.3.0/css/tooltipster.min.css" />
+		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="/static/css/site.css" />
+
+		<style>
+			.dnd-text-box {
+				border: 1px solid black;
+				height: 200px;
+				overflow: scroll;
+				padding: 15px;
+				margin-bottom:15px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<!-- top nav -->
+		<nav class="navbar navbar-default">
+		  <div class="container-fluid">
+		    <div class="navbar-header">
+		    	<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#nav-dropdown" aria-expanded="false">
+		        <span class="sr-only">Toggle navigation</span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </button>
+		      <a class="navbar-brand" href="/">
+		        <span class="brand-blue">AG</span>-<span class="brand-red">Games</span>
+		      </a>
+		    </div>
+
+		    <!-- encapsulated in dropdown for mobile -->
+		    <div class="collapse navbar-collapse" id="nav-dropdown">
+		    	<ul class="nav navbar-nav navbar-right">
+			        <li class="active"><a href="/">Home <span class="sr-only">(current)</span></a></li>
+			      </ul>
+		    </div>
+		  </div>
+		</nav>
+
+		<div class="container">
+			<div class="row">
+				<h2>Dungeons &amp; Dragons</h2>
+				<div class="col-sm-offset-1 col-sm-6">
+						Dice rolling
+						<hr>
+						<div>
+							<form id="dice-form">
+								<label class="" for="dice-input">Enter dice type (e.g. 8, 10, 20...) </label>
+								<input id="dice-input" class="form-control" type="text" />
+								<input type="submit" value="Roll" />
+							</form>
+						</div>
+						<hr />
+						<div class="dice">
+							<div>Dice Type: <span id="dice-type"></span></div>
+							<div>Dice Value: <span id="dice-value"></span></div>
+						</div>
+				</div>
+				<div class="col-sm-5">
+					<div class="row">
+						Team board:
+						<div id="chat-box" class="dnd-text-box"></div>
+						<div>
+							<form id="chat-box-form">
+								<!--
+								<div class="form-group">
+									<label for="chat-box-name" class="disabled">Your name: &nbsp;&nbsp;&nbsp;</label>
+									<input type="text" id="chat-box-name" />
+								</div>
+								-->
+								
+								<div class="form-group">
+									<label for="chat-box-text">Write to board: &nbsp;&nbsp;&nbsp;</label>
+									<input id="chat-box-text" type="text" />
+									<input type="submit" value="Send" />
+								</div>
+							</form>
+						</div>
+					</div>
+					<hr/>
+					<div class="row">
+						<form>
+							Personal Notes:
+							<textarea id="personal-notes" class="dnd-text-box form-control"></textarea>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- script -->
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+		<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+
+		// module for storing information persistently. Currently 
+		// utilizes localStorage (note an instance is never needed to save)
+		// expects a prefix that will be prepended to all keys stored (organization)
+		var PStorage = (function(storagePrefix) {
+			// main key to pass in localStorage.get() == MAIN_STORAGE_KEY
+			
+			// stores/updates arbitrary data with the key (can be objects as well as strings)
+			var store = function(key, value) {
+				window.localStorage.setItem(storagePrefix+"-" + key, JSON.stringify(value));
+			};
+
+			// returns the item, or null if DNE
+			var get = function(key) {
+				return JSON.parse(window.localStorage.getItem(storagePrefix+"-"+key));
+			};
+
+			return {
+				store:store,
+				get:get
+			};
+		});
+
+		// main
+		$(function() {
+			var GameManagerDnD = (function() {
+				var storage = new PStorage("dnd");	// for storing persistent info
+				var lastMessageIndex = 0;			// index of last message placed on team chat
+
+				// DOM
+				var $chatBox = $('#chat-box');
+				var $diceType = $('#dice-type');
+				var $diceValue = $('#dice-value');
+				var $personalNotes = $('#personal-notes');
+				var $chatName = $('#chat-box-name');
+
+				var api = {
+					updateTeamChat:function(msgStr) {
+						// POST /dnd/chat
+
+						var msg = {
+							message:msgStr,
+							messageTimestamp:new Date()
+						};
+
+						$.ajax({
+							url:"/dnd/chat",
+							method:"POST",
+							data:msg,
+							success:function(d) {
+								console.log("POSTed team chat message");
+								$('#chat-box-text').val("");
+							},
+							error:function() {
+								console.log("Could not POST team chat message");
+							}
+						});
+					},
+					getTeamChat:function() {
+						// GET /dnd/chat
+
+						$.ajax({
+							url:"/dnd/chat/"+ lastMessageIndex,
+							method:"GET",
+							success:function(d) {
+								updateTeamChatUI(d);
+							},
+							error:function() {
+								console.log("Error, Disconnect?")
+							}
+						});
+					},
+					updateDice:function(d) {
+						// POST /dnd/dice
+
+						$.ajax({
+							url:"/dnd/dice",
+							method: "POST",
+							data:d,
+							success:function(d) {
+								console.log("udated dice value to origin");
+								// note we do not update UI here. Leave it to getDice()'s next iteration
+							},
+							error:function() {
+								console.log("unable to update dice roll value.");
+							}
+						}); 
+					},
+					getDice:function() {
+						// GET /dnd/dice
+
+						$.ajax({
+							url:"/dnd/dice",
+							method:"GET",
+							success:function(d) {
+								// update UI
+								updateDiceUI(d);
+
+							},
+							error:function() {
+								console.log("Could not get dice, Disconnect?");
+							}
+						});
+					}
+				};
+
+				function updateTeamChatUI(newMessages) {
+					for (var index = 0; index< newMessages.length; index++) {
+						var newDiv = document.createElement("div");
+						newDiv.setAttribute("class", "chat-box-item");
+						newDiv.innerHTML = "-- " + newMessages[index].message;
+						$chatBox[0].appendChild(newDiv);
+					}
+	
+					$chatBox[0].scrollTop = $chatBox[0].scrollHeight;
+					lastMessageIndex += (index);
+				}
+
+				function updateDiceUI(params) {
+					$diceType.text(params.diceType);
+					$diceValue.text(params.rollValue);
+				}
+
+				function saveLocalState() {
+					// notes
+					storage.store("notes", $personalNotes.val());
+
+					// chat name
+					storage.store("name", $chatName.val());
+				}
+
+				var rollDice = function(type) {
+					return Math.floor(Math.random()*type);
+				};
+
+				var start = function() {
+					// really just a matter of setting timeouts
+					setInterval(function() {
+						console.log("eyy")
+						api.getTeamChat();
+					}, 1000);	
+
+					setInterval(function() {
+						api.getDice();
+					}, 1000);
+
+					setInterval(function() {
+						saveLocalState();
+					}, 5000);
+
+					// restore needed state
+					var notes = storage.get("notes");
+					if (notes) {
+						notes = notes.replace(/\r\n?|\\n/g, '<br />');
+						$personalNotes.val(notes);
+					}
+				};
+
+				return {
+					start:start,
+					rollDice:rollDice,
+					updateDice:api.updateDice,
+					updateTeamChat:api.updateTeamChat
+				};
+
+			});	
+
+			// form events
+			var gameManager = new GameManagerDnD();
+			gameManager.start();
+			$('#dice-form').on("submit", function(e) {
+				e.preventDefault();
+
+				var diceTypeRaw = $('#dice-input').val();
+				var diceType = diceTypeRaw.split("d");
+				var rollTimes = +diceType[0];
+				var rollValues = [];
+
+				for (var i = 0; i < rollTimes; i++) {
+					rollValues.push(gameManager.rollDice(diceType[1]));
+				}
+
+				gameManager.updateDice({"diceType":diceTypeRaw, "rollValue": JSON.stringify(rollValues)});
+
+			});
+
+			$('#chat-box-form').on("submit", function(e) {
+				e.preventDefault();
+				var msgStr = $('#chat-box-text').val();
+				gameManager.updateTeamChat(msgStr);
+			});
+
+		});
+		</script>
+	</body>
+</html>
