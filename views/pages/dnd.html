@@ -225,7 +225,7 @@
 								// update UI
 								updateDiceUI(d.dice);
 								updateTeamChatUI(d.chatMessages);
-								
+
 								$diceAnimation.css("display", "none");
 							},
 							error:function() {
@@ -261,7 +261,20 @@
 				}
 
 				var rollDice = function(max) {
-					return 1+Math.floor(Math.random()*(max-1));
+					// give a small boost by taking largest of roll set
+					var rolls = [];
+					for (var i = 0; i < 2; i++) {	// modulate iteration count as you like
+						rolls.push(1+Math.floor(Math.random()*(max-1)))
+					}
+
+					var highestRoll = 1;
+					for (var i = 0; i < rolls.length; i++) {
+						if (rolls[i] > highestRoll) {
+							highestRoll = rolls[i];
+						}
+					}
+
+					return highestRoll;
 				};
 
 				var start = function() {
