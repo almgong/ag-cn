@@ -44,7 +44,7 @@ app.get('/', function(request, response) {
 
 var chat = [];	// list of chat items (each should be an object with string + time)
 var dice = {};	// {rollValue:x, diceType:[4,8,10,20...]}
-var enemies = [{"enemyId":0, "text":"test"}, {"enemyId":1, "text":"eyy"}];	// current set of enemies
+var enemies = [];	// current set of enemies
 
 app.get('/dnd', function(request, response) {
 
