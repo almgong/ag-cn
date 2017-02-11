@@ -44,6 +44,7 @@ app.get('/', function(request, response) {
 
 var chat = [];	// list of chat items (each should be an object with string + time)
 var dice = {};	// {rollValue:x, diceType:[4,8,10,20...]}
+var enemies = [{"enemyId":0, "text":"test"}, {"enemyId":1, "text":"eyy"}];	// current set of enemies
 
 app.get('/dnd', function(request, response) {
 
@@ -95,12 +96,21 @@ app.post('/dnd/dice', function(req, res) {
 	dice = req.body;
 });
 
+// enemy/character related
+app.get('/dnd/enemy', function(req, res) {
+	res.json(enemies);
+});
 
-// coupled endpoint to reduce number of requests for chat+dice
-app.get('/dnd/dice-and-chat/:chat_offset', function(req, res) {
+app.post('/dnd/enemy', function(req, res) {
+	enemies = req.body;	// simple, just tell server what you want the enemies to be, but in str since we cant send arrays
+});
+
+// endpoint to get ALL state (to avoid multiple requests)
+app.get('/dnd/all/:chat_offset', function(req, res) {
 	var respObj = {};
 	respObj.dice = dice;
 	respObj.chatMessages = chat.slice(req.params.chat_offset, chat.length);
+	respObj.enemies = enemies;
 	
 	res.json(respObj);
 });

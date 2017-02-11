@@ -24,6 +24,13 @@
 			#dice-rolling-animation {
 				display: none;
 			}
+			#add-enemy-btn {
+				margin: 5px 0;
+				padding: 2px;
+			}
+			.tool-btn {
+				cursor: pointer;
+			}
 		</style>
 	</head>
 
@@ -67,7 +74,7 @@
 
 								<div class="form-group">
 									<input type="submit" value="Roll" />
-									<i id="dice-rolling-animation" class="fa fa-cog fa-spin"></i>
+									<i id="dice-rolling-animation" class="fa fa-spinner fa-spin"></i>
 								</div>
 
 							</form>
@@ -76,6 +83,18 @@
 						<div class="dice">
 							<div>Dice Type: <span id="dice-type"></span></div>
 							<div>Dice Value: <span id="dice-value"></span></div>
+						</div>
+						<hr />
+						Enemies:
+						<div id="add-enemy-btn">
+							<button class="btn btn-primary" data-toggle="modal" data-target="#enemy-modal">
+								<i class="fa fa-cog"></i>
+							</button>
+						</div>
+						<div id="enemy-box" class="dnd-text-box">
+							<ul class="list-group">
+								<!-- genereated in JS -->
+							</ul>
 						</div>
 				</div>
 				<div class="col-sm-5">
@@ -107,6 +126,37 @@
 					</div>
 				</div>
 			</div>
+		</div>
+
+
+		<div class="modal fade" id="enemy-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        <h4 class="modal-title">Edit enemies</h4>
+		      </div>
+		      <div class="modal-body">
+		        <div>
+		        	<div>
+		        		<form id="new-enemy-form">
+		        			<label for="new-enemy-input">Add enemy:</label>
+		        			<input id="new-enemy-input" type="text" />
+		        			<input type="submit" value="Go" />
+		        		</form>
+		        	</div>
+		        	<hr />
+		        	<ul id="enemy-modal-list" class="list-group">
+		        		<!-- generated in JS -->
+		        	</ul>
+		        </div>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		        <button id="save-enemies-btn" type="button" class="btn btn-primary">Save changes</button>
+		      </div>
+		    </div>
+		  </div>
 		</div>
 
 
@@ -145,11 +195,21 @@
 
 				// DOM
 				var $chatBox = $('#chat-box');
+				var $enemyBox = $('#enemy-box');
+				var $enemyModal = $('#enemy-modal');
+				var $enemyModalList = $('#enemy-modal-list');
+				var $saveEnemiesBtn = $('#save-enemies-btn');
+				var $newEnemyForm = $('#new-enemy-form');
+				var $newEnemyInput = $('#new-enemy-input');
 				var $diceType = $('#dice-type');
 				var $diceValue = $('#dice-value');
 				var $personalNotes = $('#personal-notes');
 				var $chatName = $('#chat-box-name');
 				var $diceAnimation = $('#dice-rolling-animation');
+
+				// local state
+				var currentEnemies = [];	// [{enemyId:x, text:"..."}, ...]
+				var nextEnemyId = 0;		// unique id for each enemy
 
 				var api = {
 					updateTeamChat:function(msgStr) {
@@ -187,6 +247,9 @@
 						});
 					},
 					updateDice:function(d) {
+						// include name in dice roll!
+						d.rollerName = $chatName.val();
+
 						// POST /dnd/dice
 						$.ajax({
 							url:"/dnd/dice",
@@ -216,20 +279,55 @@
 							}
 						});
 					},
-					getDiceAndChat:function() {
-						// GET /dnd/dice-and-chat
+					updateEnemies:function(enemies) {
+						
+						var enemiesNow = enemies;
+						console.log(enemiesNow)
+						// enemy should have a text value and an integer id
 						$.ajax({
-							url:"/dnd/dice-and-chat/" + lastMessageIndex,
-							method: "GET",
+							url:"/dnd/enemy",
+							method: "POST",
+							contentType:'application/json',
+							data:JSON.stringify(enemiesNow),
 							success:function(d) {
+								console.log("POSTed new enemy.");
+								console.log(enemies)
+							},
+							error:function() {
+								console.log("Could not POST new enemy...");
+							}
+						});
+					},
+					getEnemies:function() {
+						$.ajax({
+							url:"/dnd/enemy",
+							method:"GET",
+							success:function(d) {
+								console.log(d);
+								currentEnemies = d.enemies;
+								updateEnemiesUI(d);
+							}, 
+							error:function() {
+								console.log("Could not get enemeies...");
+							}
+						});
+					},
+					getAllState:function() {
+						$.ajax({
+							url:"/dnd/all/" + lastMessageIndex,
+							method:"GET",
+							success:function(d) {
+								// update any local state
+								currentEnemies = d.enemies;
+
 								// update UI
 								updateDiceUI(d.dice);
 								updateTeamChatUI(d.chatMessages);
-
+								updateEnemiesUI(d.enemies);
 								$diceAnimation.css("display", "none");
 							},
 							error:function() {
-								console.log("unable to get dice and chat.");
+								console.log("Could not get all state, disconnect?");
 							}
 						});
 					}
@@ -249,7 +347,30 @@
 
 				function updateDiceUI(params) {
 					$diceType.text(params.diceType);
-					$diceValue.text(params.rollValue);
+
+					if (params.rollValue) {
+						$diceValue.text(params.rollerName + " rolled " + params.rollValue + "!");
+					}
+				}
+
+				function updateEnemiesUI(enemies) {
+					// enemies local var contains newest list of enemies
+		
+					// update local state and redraw
+					var $ul = $enemyBox.children("ul");
+					$ul.empty();
+					currentEnemies = enemies;			// we need currentEnemies for editing only
+
+					// generate + append enemies-box dom elements
+					for (var i = 0; i < enemies.length; i++) {
+
+						// for the enemies box display
+						var li = document.createElement("li");
+						li.setAttribute("class", "list-group-item");
+						li.innerHTML = enemies[i].text;
+
+						$ul[0].appendChild(li);
+					}	
 				}
 
 				function saveLocalState() {
@@ -261,38 +382,16 @@
 				}
 
 				var rollDice = function(max) {
-					// give a small boost by taking largest of roll set
-					var rolls = [];
-					for (var i = 0; i < 2; i++) {	// modulate iteration count as you like
-						rolls.push(1+Math.floor(Math.random()*(max-1)))
-					}
-
-					var highestRoll = 1;
-					for (var i = 0; i < rolls.length; i++) {
-						if (rolls[i] > highestRoll) {
-							highestRoll = rolls[i];
-						}
-					}
-
-					return highestRoll;
+					return 1+Math.ceil(Math.random()*(max-1));
 				};
 
 				var start = function() {
-					// really just a matter of setting timeouts
-					// setInterval(function() {
-					// 	api.getTeamChat();
-					// }, 750);	
-
-					// setInterval(function() {
-					// 	api.getDice();
-					// }, 1000);
+					// really just a matter of setting intervals
 
 					// NEW used a coupled endpoint for both chat and dice
-					setInterval(api.getDiceAndChat, 1000);
+					setInterval(api.getAllState, 1200);
 
-					setInterval(function() {
-						saveLocalState();
-					}, 5000);
+					setInterval(saveLocalState, 5000);
 
 					// restore needed state
 					var notes = storage.get("notes");
@@ -301,7 +400,84 @@
 						$personalNotes.val(notes);
 					}
 
-					$chatName.val(storage.get("name"));
+					var name = storage.get("name");
+					if (!name) {
+						name = ("anon-" + Math.ceil(Math.random()*10000));
+					} 
+
+					$chatName.val(name);
+
+
+					// events
+					$('#add-enemy-btn').on("click", function(e) {
+						e.preventDefault();
+
+						// repopulate enemy modal
+						$enemyModalList.empty();
+						for (var i = 0; i < currentEnemies.length; i++) {
+							// for the enemies modal
+							var liModal = document.createElement("li");
+							liModal.setAttribute("class", "list-group-item");
+							liModal.setAttribute("data-enemy-id", currentEnemies[i].enemyId);
+							liModal.innerHTML = "<i class='tool-btn delete-enemy-btn fa fa-times pull-right'></i>";
+
+							var input = document.createElement("input");
+							input.setAttribute("value", currentEnemies[i].text);
+							liModal.appendChild(input);
+
+							$enemyModalList[0].appendChild(liModal);
+						}
+
+						// bind delete button
+						$('.delete-enemy-btn').on("click", function() {
+							$(this).parent().remove();
+						});
+					});
+
+					$saveEnemiesBtn.on("click", function(e) {
+						
+						// get all enemies shown in modal
+						var $enemiesListItems = $enemyModalList.children("li");	// should preserve DOM order 
+						var newEnemiesList = [];
+
+						for (var i = 0; i < $enemiesListItems.length; i++) {
+							console.log($($enemiesListItems).children("input").val())
+							newEnemiesList.push({
+								"enemyId": +$enemiesListItems[i].getAttribute("data-enemy-id"),
+								"text": $($enemiesListItems[i]).children("input").val()
+							});
+						}
+
+						// don't redraw UI here, let next iteration do it so everyone sees it at same time!
+						api.updateEnemies(newEnemiesList);
+
+						$enemyModal.modal("hide");
+					});
+
+					$newEnemyForm.on("submit", function(e) {
+						e.preventDefault();
+
+						// quickly find the largest id to determine this enemy's id
+						var enemiesInList = $enemyModalList.children("li");
+						var enemyId = 0;
+						if (enemiesInList.length > 0) {
+							enemyId = 
+								1 + (+enemiesInList[enemiesInList.length-1].getAttribute("data-enemy-id"));
+						} 
+
+						// just append it to the DOM (save changes button will POST updates)
+						var li = document.createElement("li");
+						li.setAttribute("class", "list-group-item");
+						li.setAttribute("data-enemy-id", enemyId);
+						li.innerHTML = "<i class='tool-btn delete-enemy-btn fa fa-times pull-right'></i>";
+
+						var input = document.createElement("input");
+						input.setAttribute("value", $newEnemyInput.val());
+						li.appendChild(input);
+
+						$enemyModalList[0].appendChild(li);
+						$newEnemyInput.val("");
+					});
 				};
 
 				return {
@@ -313,7 +489,7 @@
 
 			});	
 
-			// form events
+			// form events (should move form events to inside start())
 			var gameManager = new GameManagerDnD();
 			gameManager.start();
 			$('#dice-form').on("submit", function(e) {
@@ -342,7 +518,6 @@
 				msgStr = "(" + name + ") " + msgStr;
 				gameManager.updateTeamChat(msgStr);
 			});
-
 		});
 		</script>
 	</body>
