@@ -163,6 +163,7 @@
 		<!-- script -->
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 		<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript">
 
 		// module for storing information persistently. Currently 
@@ -211,6 +212,9 @@
 				var currentEnemies = [];	// [{enemyId:x, text:"..."}, ...]
 				var nextEnemyId = 0;		// unique id for each enemy
 
+				// socket to communicate with server
+				var socket = io("/dnd");	// io(...) specifies the namespace to connect to 
+
 				var api = {
 					updateTeamChat:function(msgStr) {
 						// POST /dnd/chat
@@ -220,18 +224,11 @@
 							messageTimestamp:new Date()
 						};
 
-						$.ajax({
-							url:"/dnd/chat",
-							method:"POST",
-							data:msg,
-							success:function(d) {
-								console.log("POSTed team chat message");
-								$('#chat-box-text').val("");
-							},
-							error:function() {
-								console.log("Could not POST team chat message");
-							}
-						});
+						// update locally
+						updateTeamChatUI([msg]);
+
+						// update remotely
+						socket.emit("chat", [msg]);
 					},
 					getTeamChat:function() {
 						// GET /dnd/chat
@@ -242,7 +239,7 @@
 								updateTeamChatUI(d);
 							},
 							error:function() {
-								console.log("Error, Disconnect?")
+								console.log("Error, Disconnect?");
 							}
 						});
 					},
@@ -250,19 +247,11 @@
 						// include name in dice roll!
 						d.rollerName = $chatName.val();
 
-						// POST /dnd/dice
-						$.ajax({
-							url:"/dnd/dice",
-							method: "POST",
-							data:d,
-							success:function(d) {
-								console.log("udated dice value to origin");
-								//$diceAnimation.css("display", "none");
-							},
-							error:function() {
-								console.log("unable to update dice roll value.");
-							}
-						}); 
+						// show locally
+						updateDiceUI(d);
+
+						// emit dice roll to server
+						socket.emit("dice", d);
 					},
 					getDice:function() {
 						// GET /dnd/dice
@@ -280,23 +269,11 @@
 						});
 					},
 					updateEnemies:function(enemies) {
-						
-						var enemiesNow = enemies;
-						console.log(enemiesNow)
-						// enemy should have a text value and an integer id
-						$.ajax({
-							url:"/dnd/enemy",
-							method: "POST",
-							contentType:'application/json',
-							data:JSON.stringify(enemiesNow),
-							success:function(d) {
-								console.log("POSTed new enemy.");
-								console.log(enemies)
-							},
-							error:function() {
-								console.log("Could not POST new enemy...");
-							}
-						});
+						// update locally
+						updateEnemiesUI(enemies);
+
+						// enemies should have a text value and an integer id
+						socket.emit("enemies update", enemies);
 					},
 					getEnemies:function() {
 						$.ajax({
@@ -321,10 +298,9 @@
 								currentEnemies = d.enemies;
 
 								// update UI
-								updateDiceUI(d.dice);
-								updateTeamChatUI(d.chatMessages);
+								//updateDiceUI(d.dice);
+								//updateTeamChatUI(d.chatMessages);
 								updateEnemiesUI(d.enemies);
-								$diceAnimation.css("display", "none");
 							},
 							error:function() {
 								console.log("Could not get all state, disconnect?");
@@ -334,7 +310,7 @@
 				};
 
 				function updateTeamChatUI(newMessages) {
-					for (var index = 0; index< newMessages.length; index++) {
+					for (var index = 0; index < newMessages.length; index++) {
 						var newDiv = document.createElement("div");
 						newDiv.setAttribute("class", "chat-box-item");
 						newDiv.innerHTML = "-- " + newMessages[index].message;
@@ -346,6 +322,7 @@
 				}
 
 				function updateDiceUI(params) {
+					$diceAnimation.css("display", "none");
 					$diceType.text(params.diceType);
 
 					if (params.rollValue) {
@@ -389,11 +366,14 @@
 					// really just a matter of setting intervals
 
 					// NEW used a coupled endpoint for both chat and dice
-					setInterval(api.getAllState, 1200);
+					//setInterval(api.getAllState, 1200);
 
-					setInterval(saveLocalState, 5000);
+					//setInterval(saveLocalState, 5000);
 
-					// restore needed state
+					// quickly get current state once
+					api.getAllState();
+
+					// restore any locally persisted state
 					var notes = storage.get("notes");
 					if (notes) {
 						notes = notes.replace(/\r\n?|\\n/g, '<br />');
@@ -407,8 +387,11 @@
 
 					$chatName.val(name);
 
+					// notify server of our existence
+					console.log("emitting join")
+					socket.emit("join", {"name": name, "stats":{}});
 
-					// events
+					// bind JS events
 					$('#add-enemy-btn').on("click", function(e) {
 						e.preventDefault();
 
@@ -478,13 +461,55 @@
 						$enemyModalList[0].appendChild(li);
 						$newEnemyInput.val("");
 					});
+
+					$('#dice-form').on("submit", function(e) {
+						e.preventDefault();
+
+						//$('#dice-rolling-animation').css("display", "inline-block");
+
+						var diceTypeRaw = $('#dice-input').val();
+						var diceType = diceTypeRaw.split("d");
+						var rollTimes = +diceType[0];
+						var rollValues = [];
+
+						for (var i = 0; i < rollTimes; i++) {
+							rollValues.push(rollDice(diceType[1]));
+						}
+
+						api.updateDice({"diceType":diceTypeRaw, "rollValue": JSON.stringify(rollValues)});
+
+					});
+
+					$('#chat-box-form').on("submit", function(e) {
+						e.preventDefault();
+
+						var msgStr = $('#chat-box-text').val();
+						var name = ($('#chat-box-name').val())? $('#chat-box-name').val() : "anon.";
+						$('#chat-box-text').val("");
+
+						msgStr = "(" + name + ") " + msgStr;
+						api.updateTeamChat(msgStr);
+					});
+
+					// socket io server-publish events!
+					socket.on("chat", function(message) {
+						console.log("new message")
+						updateTeamChatUI(message);
+					});
+
+					socket.on("dice", function(dice) {
+						console.log("new dice roll")
+						updateDiceUI(dice);
+					});
+
+					socket.on("enemies update", function(enemies) {
+						console.log("updated enemies")
+						updateEnemiesUI(enemies);
+					});
 				};
 
 				return {
-					start:start,
-					rollDice:rollDice,
-					updateDice:api.updateDice,
-					updateTeamChat:api.updateTeamChat
+					start:start
 				};
 
 			});	
@@ -492,32 +517,6 @@
 			// form events (should move form events to inside start())
 			var gameManager = new GameManagerDnD();
 			gameManager.start();
-			$('#dice-form').on("submit", function(e) {
-				e.preventDefault();
-
-				$('#dice-rolling-animation').css("display", "inline-block");
-
-				var diceTypeRaw = $('#dice-input').val();
-				var diceType = diceTypeRaw.split("d");
-				var rollTimes = +diceType[0];
-				var rollValues = [];
-
-				for (var i = 0; i < rollTimes; i++) {
-					rollValues.push(gameManager.rollDice(diceType[1]));
-				}
-
-				gameManager.updateDice({"diceType":diceTypeRaw, "rollValue": JSON.stringify(rollValues)});
-
-			});
-
-			$('#chat-box-form').on("submit", function(e) {
-				e.preventDefault();
-				var msgStr = $('#chat-box-text').val();
-				var name = ($('#chat-box-name').val())? $('#chat-box-name').val() : "anon.";
-
-				msgStr = "(" + name + ") " + msgStr;
-				gameManager.updateTeamChat(msgStr);
-			});
 		});
 		</script>
 	</body>

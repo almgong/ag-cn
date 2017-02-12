@@ -9,6 +9,11 @@ var bodyParser = require('body-parser');
 var game = require('./lib/game.js');
 var auth = require('./lib/auth/auth.js');
 
+// socket.io
+var http = require('http').Server(app);
+var io = require("socket.io")(http);
+var dndIO = io.of("/dnd")
+
 app.set('port', (process.env.PORT || 5000));
 
 //static
@@ -42,9 +47,7 @@ app.get('/', function(request, response) {
 
 /** DnD **/
 
-var chat = [];	// list of chat items (each should be an object with string + time)
-var dice = {};	// {rollValue:x, diceType:[4,8,10,20...]}
-var enemies = [];	// current set of enemies
+var enemies = [];	// current set of enemies (good for people who have joined intermittently)
 
 app.get('/dnd', function(request, response) {
 
@@ -105,15 +108,60 @@ app.post('/dnd/enemy', function(req, res) {
 	enemies = req.body;	// simple, just tell server what you want the enemies to be, but in str since we cant send arrays
 });
 
-// endpoint to get ALL state (to avoid multiple requests)
+// endpoint to get ALL state (to avoid multiple requests)  - EDIT really just enemies now
 app.get('/dnd/all/:chat_offset', function(req, res) {
 	var respObj = {};
-	respObj.dice = dice;
-	respObj.chatMessages = chat.slice(req.params.chat_offset, chat.length);
+	//respObj.dice = dice;
+	//respObj.chatMessages = chat.slice(req.params.chat_offset, chat.length);
 	respObj.enemies = enemies;
 	
 	res.json(respObj);
 });
+
+
+// NEW socket.io implementation of real-time DnD services (eliminates client polling)
+// client implementations should take note of the custom events declared here
+var players = {};	// {{ name:"", stats:{} },...}
+dndIO.on("connection", function(socket) {
+
+	// event: disconnect (AUTO)
+	socket.on("disconnect", function() {
+		
+		// notify client chat boxes that player has left
+		if (players[socket.id]) {
+			socket.broadcast.emit("chat", [{"message":"[Server] " + players[socket.id].name + " has logged off."}]);	
+			delete players[socket.id];		// remove player from map
+		}
+	});
+
+	socket.on("join", function(playerObj) {
+		players[socket.id] = playerObj;
+		dndIO.emit("chat", [{"message":"[Server] " + playerObj.name + " has joined the channel!"}]);
+	});	
+
+	// event: chat - when server receives this, means a new message available to broadcast, 
+	// when clients receive this, that means a new message is to be drawn
+	socket.on("chat", function(message) {
+		socket.broadcast.emit("chat", message);		// broadcast to all EXCEPT sender
+	});
+
+	// event: dice - when server receives this, means a new dice roll has just occurred (so broadcast it)
+	// when clients receive this, that means a new dice roll is to be drawn
+	socket.on("dice", function(dice) {
+		socket.broadcast.emit("dice", dice);
+	}); 
+
+	// event: enemies update = when server receives this, a new array of enemies to broadcast
+	// when clients receive this, that means a new list to draw
+	socket.on("enemies update", function(enemiesUpdated) {
+		enemies = enemiesUpdated;
+		socket.broadcast.emit("enemies update", enemiesUpdated);
+	});
+});
+
+// setInterval(function() {
+// 	dndIO.emit("players", players);	// every 5 seconds, notify people of current players
+// }, 5000);
 
 
 
@@ -239,8 +287,12 @@ app.get('/test', function(req, res) {
 	res.json(testRoom);
 });
 
-app.listen(app.get('port'), function() {
-  console.log('Node app is running on port', app.get('port'));
+// app.listen(app.get('port'), function() {
+//   console.log('Node app is running on port', app.get('port'));
+// });
+
+http.listen(app.get('port'), function() {
+	console.log('Node app is running on port', app.get('port'));
 });
 
 
