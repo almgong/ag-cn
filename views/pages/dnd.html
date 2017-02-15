@@ -10,10 +10,21 @@
 		<link rel="stylesheet" type="text/css" href="/static/css/animate.css" />
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tooltipster/3.3.0/css/tooltipster.min.css" />
 		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
 		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
 		<link rel="stylesheet" type="text/css" href="/static/css/site.css" />
 
 		<style>
+			#add-enemy-btn {
+				margin: 5px 0;
+				padding: 2px;
+			}
+			.character-stats-input {
+				width: 100px;
+			}
+			.clearfix {
+				clear: both;
+			}
 			.dnd-text-box {
 				border: 1px solid black;
 				height: 200px;
@@ -24,12 +35,73 @@
 			#dice-rolling-animation {
 				display: none;
 			}
-			#add-enemy-btn {
-				margin: 5px 0;
-				padding: 2px;
+			.pointer {
+				cursor:pointer;
+			}
+			.inventory-box {
+				border: 1px solid gray;
+				border-radius: 5px;
+				padding-top:5px;
+				height:40px;
+				cursor: pointer;
 			}
 			.tool-btn {
 				cursor: pointer;
+			}
+			#tool-belt {
+				z-index: 1;
+				position: fixed;
+				bottom: 5px;
+				right: 25px;
+			}
+			.tool-belt-item {
+				height: 50px;
+				min-width: 50px;
+				border:1px solid black;
+				border-radius: 5px;
+				background-color: gray;
+				color: white;
+				cursor: pointer;
+				padding-top:10px;
+			}
+			#inventory-trash {
+				margin: 10px 0 0 0;
+				border: 1px solid gray;
+				padding: 5px;
+				display: inline-block;
+			}
+			.ui-screen {
+				width: 400px;
+				border: 3px ridge #67a7e0;
+				background-color: white;
+				border-radius: 5px;
+				position: fixed;
+				top: 50px;
+				right: 25px;
+				padding: 15px;
+			}
+			.ui-screen-header {
+				font-weight: bold;
+				font-size:1.2em;
+			}
+			.ui-screen-body {
+
+			}
+			.ui-screen-footer {
+				border-top:1px solid gray;
+				margin: 15px 0;
+			}
+			.width-50 {
+				width: 50%;
+			}
+			.width-33 {
+				width: 33.3333333333%;
+			}
+			.width-10 {
+				width: 10%;
+			}
+			.width-20 {
+				width: 20%;
 			}
 		</style>
 	</head>
@@ -99,7 +171,7 @@
 				</div>
 				<div class="col-sm-5">
 					<div class="row">
-						Team board:
+						World chat:
 						<div id="chat-box" class="dnd-text-box"></div>
 						<div>
 							<form id="chat-box-form">
@@ -124,6 +196,22 @@
 							<textarea id="personal-notes" class="dnd-text-box form-control"></textarea>
 						</form>
 					</div>
+				</div>
+			</div>
+			<div id="tool-belt" class="row text-center">
+				<div class="col-sm-4 tool-belt-item" id="tool-belt-character">
+					<div title="Character">
+						<i class="fa fa-2x fa-user-circle"></i>
+					</div>
+				</div>
+				<div class="col-sm-4 tool-belt-item" id="tool-belt-trade-items">
+					<div title="Trade items">
+						<i class="fa fa-2x fa-handshake-o"></i>
+					</div>
+				</div>
+				<div class="col-sm-4 tool-belt-item">
+					Coming soon <!-- if you are web dev savvy enough to look here, psst this is going to be an
+					interactive whiteboard eventually -->
 				</div>
 			</div>
 		</div>
@@ -159,10 +247,102 @@
 		  </div>
 		</div>
 
+		<div id="character-screen" class="hidden ui-screen draggable">
+			<div class="pull-right">
+				<i class="fa fa-times pointer"></i>
+			</div>
+			<div class="clearfix"></div>
+			<div class="ui-screen-header">
+				<h3>
+					Character: <span id="character-name"></span>
+				</h3>
+				<div id="character-stats">
+					<h3>Stats</h3>
+					<div>
+						<div class="">
+							<label for="character-level">Level:</label> 
+							<input type="text" id="character-level" class="character-stats-input" />
+						</div>
+						<div class="">
+							<label for="character-hp">HP:</label> 
+							<input type="text" id="character-hp" class="character-stats-input" />
+						</div>
+						<hr/>
+						<div class="">
+							<label for="character-class">Class:</label> 
+							<input type="text" id="character-class" class="character-stats-input" />
+						</div>
+						<div class="">
+							<label for="character-str">Str:</label> 
+							<input type="text" id="character-str" class="character-stats-input" />
+						</div>
+						<div class="">
+							<label for="character-dex">Dex:</label> 
+							<input type="text" id="character-dex" class="character-stats-input" />
+						</div>
+						<div class="">
+							<label for="character-cons">Cons:</label> 
+							<input type="text" id="character-cons" class="character-stats-input" />
+						</div>
+						<div class="">
+							<label for="character-int">Int:</label> 
+							<input type="text" id="character-int" class="character-stats-input" />
+						</div>
+						<div class="">
+							<label for="character-wis">Wis:</label> 
+							<input type="text" id="character-wis" class="character-stats-input" />
+						</div>
+						<div class="">
+							<label for="character-char">Char:</label> 
+							<input type="text" id="character-char" class="character-stats-input" />
+						</div>
+					</div>
+				</div>
+			</div>
+			<hr />
+			<div class="ui-screen-body">
+				<div id="character-inventory">
+					<H3>Inventory</H3>
+					<div id="character-inventory-items">
+						<!-- by jS -->
+					</div>
+					<hr />
+					<div class="clearfix"></div>
+					<div id="inventory-trash">
+						<i class="fa fa-2x fa-trash-o"></i>
+					</div>
+				</div>
+			</div>
+			<div class="ui-screen-footer">
+				<div id="character-currency">
+					Currency - coming soon.
+				</div>
+			</div>
+		</div>
+
+		<div id="trade-items-screen" class="hidden ui-screen draggable">
+			<div class="pull-right">
+				<i class="fa fa-times pointer"></i>
+			</div>
+			<div class="clearfix"></div>
+			<div class="ui-screen-header">
+				<h3>Exchange items</h3>
+			</div>
+			<hr />
+			<div class="ui-screen-body">
+				<h4>Available items:</h4>
+				<div id="trade-items-available-items">
+					Coming soon<!-- iniit in JS -->	
+				</div>
+			</div>
+			<div class="ui-screen-footer">
+			</div>
+		</div>
 
 		<!-- script -->
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 		<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript">
 
@@ -179,7 +359,8 @@
 
 			// returns the item, or null if DNE
 			var get = function(key) {
-				return JSON.parse(window.localStorage.getItem(storagePrefix+"-"+key));
+				var item = window.localStorage.getItem(storagePrefix+"-"+key);
+				return JSON.parse(item) || undefined;
 			};
 
 			return {
@@ -191,6 +372,16 @@
 		// main
 		$(function() {
 			var GameManagerDnD = (function() {
+
+				// constants
+				var ITEM_TYPES = {
+					"ARMOR": 1,
+					"WEAPON": 2,
+					"CONSUMABLES": 3,
+					"OTHER": 4
+				};
+
+				// misc
 				var storage = new PStorage("dnd");	// for storing persistent info
 				var lastMessageIndex = 0;			// index of last message placed on team chat
 
@@ -207,10 +398,14 @@
 				var $personalNotes = $('#personal-notes');
 				var $chatName = $('#chat-box-name');
 				var $diceAnimation = $('#dice-rolling-animation');
+				var $inventoryItemsContainer = $('#character-inventory-items');
+				var $availableTradeItemsContainer = $('trade-items-available-items');
 
 				// local state
-				var currentEnemies = [];	// [{enemyId:x, text:"..."}, ...]
-				var nextEnemyId = 0;		// unique id for each enemy
+				var currentEnemies = [];			// [{enemyId:x, text:"..."}, ...]
+				var nextEnemyId = 0;				// unique id for each enemy
+				var characterInventory = null;		// always points to an array (size is dynamic)
+				var inventoryItemIndex = 0;			// used to generate unique IDs for items
 
 				// socket to communicate with server
 				var socket = io("/dnd");	// io(...) specifies the namespace to connect to 
@@ -350,12 +545,212 @@
 					}	
 				}
 
+				function initCharacterScreen() {
+					// bind events
+					$('#tool-belt-character, #character-screen .pointer').on("click", function() {
+						$('#character-screen').toggleClass("hidden");
+					});
+
+					$('#character-stats').accordion({
+  						collapsible: true,
+  						active: false,
+  						heightStyle:"content"
+  					});
+
+  					// restore any saved state
+  					$('#character-name').text(storage.get("name"));
+
+  					var savedCharacterStats = storage.get("character-stats");
+  					$('#character-level').val(savedCharacterStats.level);
+  					$('#character-hp').val(savedCharacterStats.hp);
+					$('#character-class').val(savedCharacterStats.clss);
+					$('#character-str').val(savedCharacterStats.str);
+					$('#character-dex').val(savedCharacterStats.dex);
+					$('#character-cons').val(savedCharacterStats.cons);
+					$('#character-int').val(savedCharacterStats.intelligence);
+					$('#character-wis').val(savedCharacterStats.wis);
+					$('#character-char').val(savedCharacterStats.charisma);
+
+					var savedInventory = storage.get("inventory");
+					if (!savedInventory) {
+						// fresh init of inventory
+						savedInventory = new Array(20);
+					} 
+					
+					// store in local var that will be periodically stored to storage
+					characterInventory = savedInventory;
+
+					drawInventory(savedInventory);	// draw the inventory items to character screen
+				}
+
+				function initTradeItemsScreen() {
+					$('#tool-belt-trade-items, #trade-items-screen .pointer').on("click", function() {
+						$('#trade-items-screen').toggleClass("hidden");
+					});
+				}
+
+				// really only called via socket.io events
+				function drawAvailableTradeItems(items) {
+					// expects an array of items exactly the same as drawInventory
+					$availableTradeItemsContainer.empty();
+					for (var i = 0; i < items.length; i++) {
+						var tradeItem = document.createElement("div");
+						tradeItem.setAttribute("class", "inventory-box pull-left width-20 text-center");
+						// TODO
+					}
+				}
+
+				// returns a HTML DOM element (NOT JQ) with a correct item
+				function getIconForItemType(type) {
+					var icon = document.createElement("i");
+					var classes = "fa fa-2x ";
+
+					// add specific icon class
+					if (+type == ITEM_TYPES.WEAPON) {	
+						classes += "fa-gavel "
+					} else if (+type == ITEM_TYPES.ARMOR) {
+						classes += "fa-shield ";
+					} else if (+type == ITEM_TYPES.CONSUMABLES) {
+						classes += "fa-coffee ";
+					} else if (+type == ITEM_TYPES.OTHER) {	
+						classes += "fa-question-circle ";
+					} else {
+						// not sure what this is, leave as empty
+						console.log("invalid item type: " + type);
+					}
+
+					icon.setAttribute("class", classes);
+					return icon;
+				}
+
+				// adds item to user Inventory and redraws result
+				function addInventoryItem(item, pos) {
+					characterInventory[pos] = item;
+					drawInventory(characterInventory);
+				}
+
+				function drawInventory(inventory) {
+					// expects an array of inventory items to draw
+					// each item should be { name:"", type:1-9 (see ITEM_TYPES), "notes":"" }
+					$inventoryItemsContainer.empty();
+					for (var i = 0; i < inventory.length; i++) {	
+						var inventoryBox = document.createElement("div");
+						inventoryBox.setAttribute("class", "inventory-box pull-left width-20 text-center");
+						inventoryBox.setAttribute("data-item-pos", i);
+
+						if (inventory[i]) {
+							var itemContainer = document.createElement("div");
+							itemContainer.id = "item-id-" + inventoryItemIndex++;
+							itemContainer.setAttribute("class", "inventory-box-inner");
+							itemContainer.setAttribute("title", inventory[i].name);
+							itemContainer.setAttribute("data-toggle", "popover");
+							itemContainer.setAttribute("data-placement", "top");
+							itemContainer.setAttribute("data-trigger", "hover");
+							itemContainer.setAttribute("data-content", inventory[i].notes);
+
+							// get icon for this inventory item
+							itemContainer.appendChild(getIconForItemType(inventory[i].type));
+							inventoryBox.appendChild(itemContainer);
+						}
+
+						$inventoryItemsContainer[0].appendChild(inventoryBox);
+					}
+
+					// now bind events
+					$('.inventory-box').on("click", function() {
+						var pos = +$(this).attr("data-item-pos");
+
+						if (characterInventory[pos]) {
+							// if an item exists at this loc, do nothing to allow drag
+						} else {
+							// else clicked on an empty box (add item)
+							var itemName = prompt("Enter name of item:");
+
+							if (itemName == null) {
+								return;
+							}
+
+							var itemType = +prompt("Enter item type (Armor=" + 
+								ITEM_TYPES.ARMOR +
+								" Weapon=" + ITEM_TYPES.WEAPON +
+								" Consumable=" + ITEM_TYPES.CONSUMABLES +
+								" Other=" + ITEM_TYPES.OTHER);
+
+							if (itemType == null) {
+								return;
+							}
+
+							var itemNotes = prompt("Any notes you want to add: ");
+
+							if (itemNotes == null) {
+								return;
+							}
+
+							addInventoryItem({"name": itemName, "type":itemType, "notes":itemNotes}, pos);
+						}
+					});
+					$('.inventory-box, #inventory-trash').droppable({
+						drop:function(e, ui) {
+
+							// get relevant elements
+							var draggedEle = ui.draggable[0];
+							var targetEle = e.target;
+
+							// current position of the dragged element
+							var currentPosition = +$(draggedEle).parent().attr("data-item-pos");
+							
+							// check if the destination is the trash
+							if (targetEle.id == "inventory-trash") {
+								// just delete the item
+								characterInventory[currentPosition] = null;
+							} else {
+								// not trash, so get target position
+								var newPosition = +$(targetEle).attr("data-item-pos");
+
+								// only if these two are not the same
+								if (currentPosition != newPosition) {
+									var draggedItem = characterInventory[currentPosition];
+									characterInventory[currentPosition] = null;
+
+									// if there is an item in target spot, put it in this item's place
+									if (characterInventory[newPosition]) {
+										characterInventory[currentPosition] = characterInventory[newPosition];
+									}
+
+									characterInventory[newPosition] = draggedItem;
+								}
+							}
+
+							// redraw inventory (needed as users may drag items out of bounds)
+							drawInventory(characterInventory);
+						}
+					});
+					$('.inventory-box-inner').popover().draggable({revert:'invalid'});
+				}	
+
 				function saveLocalState() {
 					// notes
 					storage.store("notes", $personalNotes.val());
 
 					// chat name
 					storage.store("name", $chatName.val());
+
+					// character stats
+					var currentStats = {};
+					currentStats.level = $('#character-level').val();
+					currentStats.hp = $('#character-hp').val();
+					currentStats.clss = $('#character-class').val();
+					currentStats.str = $('#character-str').val();
+					currentStats.dex = $('#character-dex').val();
+					currentStats.cons = $('#character-cons').val();
+					currentStats.intelligence = $('#character-int').val();
+					currentStats.wis = $('#character-wis').val();
+					currentStats.charisma = $('#character-char').val();
+
+					storage.store("character-stats", currentStats);
+
+					// inventory
+					storage.store("inventory", characterInventory);
 				}
 
 				var rollDice = function(max) {
@@ -368,8 +763,7 @@
 					// NEW used a coupled endpoint for both chat and dice
 					//setInterval(api.getAllState, 1200);
 
-					//setInterval(saveLocalState, 5000);
-
+			
 					// quickly get current state once
 					api.getAllState();
 
@@ -386,6 +780,8 @@
 					} 
 
 					$chatName.val(name);
+
+					
 
 					// notify server of our existence
 					console.log("emitting join")
@@ -491,6 +887,15 @@
 						api.updateTeamChat(msgStr);
 					});
 
+					// any JQ based bindings here
+					// i.e. draggability, tooltips, etc
+					$('.draggable').draggable();
+
+					// init UI
+					initCharacterScreen();	// stats and inventory
+					initTradeItemsScreen();
+					
+
 					// socket io server-publish events!
 					socket.on("chat", function(message) {
 						console.log("new message")
@@ -506,6 +911,10 @@
 						console.log("updated enemies")
 						updateEnemiesUI(enemies);
 					});
+
+
+					// begin periodically saving state
+					setInterval(saveLocalState, 5000);
 				};
 
 				return {
