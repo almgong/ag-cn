@@ -508,14 +508,22 @@
 				}
 
 				function updateOnlinePlayersUI(players) {
-					console.log(players);
+					function formatStats(stats) {
+						var ret = "";
+						for (key in stats) {
+							ret += (key + ": " + stats[key] + "<br/>");
+						}
+						return ret;
+					}
+
 					$onlinePlayersContainer.empty();
 					for (var i = 0; i < players.length; i++) {
 						var player = document.createElement("span");
 						player.setAttribute("class", "online-player text-center");
 						player.setAttribute("title", players[i].name);
-						player.setAttribute("data-content", players[i].stats);
-						player.setAttribute("data-placement", "top");
+						player.setAttribute("data-content", formatStats(players[i].stats));
+						player.setAttribute("data-html", true);	// allows html in content
+						player.setAttribute("data-placement", "auto");
 						player.setAttribute("data-trigger", "hover");
 						player.innerHTML = "<i class='status-green fa fa-circle'></i>" + players[i].name;
 
