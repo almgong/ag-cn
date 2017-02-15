@@ -70,6 +70,12 @@
 				padding: 5px;
 				display: inline-block;
 			}
+			.online-player {
+				margin: 0 5px;
+			}
+			.status-green {
+				color: #98fb98;
+			}
 			.ui-screen {
 				width: 400px;
 				border: 3px ridge #67a7e0;
@@ -172,6 +178,7 @@
 				<div class="col-sm-5">
 					<div class="row">
 						World chat:
+						<div id="online-players"><!-- JS --></div>
 						<div id="chat-box" class="dnd-text-box"></div>
 						<div>
 							<form id="chat-box-form">
@@ -400,6 +407,7 @@
 				var $diceAnimation = $('#dice-rolling-animation');
 				var $inventoryItemsContainer = $('#character-inventory-items');
 				var $availableTradeItemsContainer = $('trade-items-available-items');
+				var $onlinePlayersContainer = $('#online-players');
 
 				// local state
 				var currentEnemies = [];			// [{enemyId:x, text:"..."}, ...]
@@ -425,19 +433,6 @@
 						// update remotely
 						socket.emit("chat", [msg]);
 					},
-					getTeamChat:function() {
-						// GET /dnd/chat
-						$.ajax({
-							url:"/dnd/chat/"+ lastMessageIndex,
-							method:"GET",
-							success:function(d) {
-								updateTeamChatUI(d);
-							},
-							error:function() {
-								console.log("Error, Disconnect?");
-							}
-						});
-					},
 					updateDice:function(d) {
 						// include name in dice roll!
 						d.rollerName = $chatName.val();
@@ -447,21 +442,6 @@
 
 						// emit dice roll to server
 						socket.emit("dice", d);
-					},
-					getDice:function() {
-						// GET /dnd/dice
-						$.ajax({
-							url:"/dnd/dice",
-							method:"GET",
-							success:function(d) {
-								// update UI
-								updateDiceUI(d);
-
-							},
-							error:function() {
-								console.log("Could not get dice, Disconnect?");
-							}
-						});
 					},
 					updateEnemies:function(enemies) {
 						// update locally
@@ -481,24 +461,6 @@
 							}, 
 							error:function() {
 								console.log("Could not get enemeies...");
-							}
-						});
-					},
-					getAllState:function() {
-						$.ajax({
-							url:"/dnd/all/" + lastMessageIndex,
-							method:"GET",
-							success:function(d) {
-								// update any local state
-								currentEnemies = d.enemies;
-
-								// update UI
-								//updateDiceUI(d.dice);
-								//updateTeamChatUI(d.chatMessages);
-								updateEnemiesUI(d.enemies);
-							},
-							error:function() {
-								console.log("Could not get all state, disconnect?");
 							}
 						});
 					}
@@ -545,6 +507,24 @@
 					}	
 				}
 
+				function updateOnlinePlayersUI(players) {
+					console.log(players);
+					$onlinePlayersContainer.empty();
+					for (var i = 0; i < players.length; i++) {
+						var player = document.createElement("span");
+						player.setAttribute("class", "online-player text-center");
+						player.setAttribute("title", players[i].name);
+						player.setAttribute("data-content", players[i].stats);
+						player.setAttribute("data-placement", "top");
+						player.setAttribute("data-trigger", "hover");
+						player.innerHTML = "<i class='status-green fa fa-circle'></i>" + players[i].name;
+
+						$onlinePlayersContainer[0].appendChild(player);
+					}
+
+					$('.online-player').popover();
+				}
+
 				function initCharacterScreen() {
 					// bind events
 					$('#tool-belt-character, #character-screen .pointer').on("click", function() {
@@ -561,15 +541,17 @@
   					$('#character-name').text(storage.get("name"));
 
   					var savedCharacterStats = storage.get("character-stats");
-  					$('#character-level').val(savedCharacterStats.level);
-  					$('#character-hp').val(savedCharacterStats.hp);
-					$('#character-class').val(savedCharacterStats.clss);
-					$('#character-str').val(savedCharacterStats.str);
-					$('#character-dex').val(savedCharacterStats.dex);
-					$('#character-cons').val(savedCharacterStats.cons);
-					$('#character-int').val(savedCharacterStats.intelligence);
-					$('#character-wis').val(savedCharacterStats.wis);
-					$('#character-char').val(savedCharacterStats.charisma);
+  					if (savedCharacterStats) {
+  						$('#character-level').val(savedCharacterStats.level);
+	  					$('#character-hp').val(savedCharacterStats.hp);
+						$('#character-class').val(savedCharacterStats.clss);
+						$('#character-str').val(savedCharacterStats.str);
+						$('#character-dex').val(savedCharacterStats.dex);
+						$('#character-cons').val(savedCharacterStats.cons);
+						$('#character-int').val(savedCharacterStats.intelligence);
+						$('#character-wis').val(savedCharacterStats.wis);
+						$('#character-char').val(savedCharacterStats.charisma);
+  					}
 
 					var savedInventory = storage.get("inventory");
 					if (!savedInventory) {
@@ -765,7 +747,7 @@
 
 			
 					// quickly get current state once
-					api.getAllState();
+					api.getEnemies();
 
 					// restore any locally persisted state
 					var notes = storage.get("notes");
@@ -785,7 +767,7 @@
 
 					// notify server of our existence
 					console.log("emitting join")
-					socket.emit("join", {"name": name, "stats":{}});
+					socket.emit("join", {"name": name, "stats":storage.get("character-stats")});
 
 					// bind JS events
 					$('#add-enemy-btn').on("click", function(e) {
@@ -894,9 +876,12 @@
 					// init UI
 					initCharacterScreen();	// stats and inventory
 					initTradeItemsScreen();
-					
+					// TODO
 
 					// socket io server-publish events!
+					// convention:
+					// ON resource get: nouns only
+					// ON resource push (i.e. POST): end event with 'update'
 					socket.on("chat", function(message) {
 						console.log("new message")
 						updateTeamChatUI(message);
@@ -912,6 +897,10 @@
 						updateEnemiesUI(enemies);
 					});
 
+					socket.on("players online", function(players) {
+						console.log("players changed");
+						updateOnlinePlayersUI(players);
+					});
 
 					// begin periodically saving state
 					setInterval(saveLocalState, 5000);

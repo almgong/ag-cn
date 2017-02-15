@@ -122,6 +122,20 @@ app.get('/dnd/all/:chat_offset', function(req, res) {
 // NEW socket.io implementation of real-time DnD services (eliminates client polling)
 // client implementations should take note of the custom events declared here
 var players = {};	// {{ name:"", stats:{} },...}
+function formatPlayersForReturn() {
+	var playersArray = [];
+	for (key in players) {
+		playersArray.push(players[key]);
+	}
+
+	// sort array by name
+	playersArray.sort(function(a,b) {
+		return a.name.localeCompare(b.name);
+	});
+
+	return playersArray;
+}
+
 dndIO.on("connection", function(socket) {
 
 	// event: disconnect (AUTO)
@@ -129,14 +143,16 @@ dndIO.on("connection", function(socket) {
 		
 		// notify client chat boxes that player has left
 		if (players[socket.id]) {
-			socket.broadcast.emit("chat", [{"message":"[Server] " + players[socket.id].name + " has logged off."}]);	
+			socket.broadcast.emit("chat", [{"message":"[Server] " + players[socket.id].name + " has logged off."}]);
 			delete players[socket.id];		// remove player from map
+			socket.broadcast.emit("players online", formatPlayersForReturn());	
 		}
 	});
 
 	socket.on("join", function(playerObj) {
 		players[socket.id] = playerObj;
 		dndIO.emit("chat", [{"message":"[Server] " + playerObj.name + " has joined the channel!"}]);
+		dndIO.emit("players online", formatPlayersForReturn());
 	});	
 
 	// event: chat - when server receives this, means a new message available to broadcast, 
