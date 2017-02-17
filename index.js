@@ -173,11 +173,21 @@ dndIO.on("connection", function(socket) {
 		enemies = enemiesUpdated;
 		socket.broadcast.emit("enemies update", enemiesUpdated);
 	});
+
+
+	// event: trade items update = when server receives this, a new array of trade items available
+	// when clients receive this, that measn a new list to draw
+	socket.on("trade items update", function(items) {
+		socket.broadcast.emit("trade items update", items);
+	});
+
+	// event: trade items update remove = when server receives this, need to broadcast that an item is removed
+	// when clients receive this, they should check if it is their item and update UI appropriately
+	socket.on("trade items update remove", function(itemRemoved) {
+		socket.broadcast.emit("trade items update", itemRemoved);
+	});
 });
 
-// setInterval(function() {
-// 	dndIO.emit("players", players);	// every 5 seconds, notify people of current players
-// }, 5000);
 
 
 

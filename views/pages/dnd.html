@@ -38,12 +38,19 @@
 			.pointer {
 				cursor:pointer;
 			}
-			.inventory-box {
+			.inventory-box, .trade-box {
 				border: 1px solid gray;
 				border-radius: 5px;
 				padding-top:5px;
 				height:40px;
-				cursor: pointer;
+				cursor: -webkit-grab;
+				cursor: -moz-grab;
+				cursor: grabbing;
+			}
+			.inventory-box:active, .trade-box:active {
+				cursor: -moz-grabbing;
+				cursor: -webkit-grabbing;
+				cursor: grabbing;
 			}
 			.tool-btn {
 				cursor: pointer;
@@ -96,6 +103,7 @@
 			.ui-screen-footer {
 				border-top:1px solid gray;
 				margin: 15px 0;
+				padding-top:10px;
 			}
 			.width-50 {
 				width: 50%;
@@ -149,12 +157,18 @@
 									<label class="" for="dice-input">Enter dice type (e.g. 3d4, 1d8, 1d10, 1d20...) </label>
 									<input id="dice-input" class="form-control" type="text" />
 								</div>
-
 								<div class="form-group">
 									<input type="submit" value="Roll" />
-									<i id="dice-rolling-animation" class="fa fa-spinner fa-spin"></i>
 								</div>
-
+								<div class="form-group">
+									<div>Common rolls:</div>
+									<button class="btn btn-default roll-dice-btn" data-dice-type="1d6">1d6</button>
+									<button class="btn btn-default roll-dice-btn" data-dice-type="1d8">1d8</button>
+									<button class="btn btn-default roll-dice-btn" data-dice-type="1d12">1d12</button>
+									<button class="btn btn-default roll-dice-btn" data-dice-type="1d20">1d20</button>
+									<button class="btn btn-default roll-dice-btn" data-dice-type="3d4">3d4</button>
+									<button class="btn btn-default roll-dice-btn" data-dice-type="3d6">3d6</button>
+								</div>
 							</form>
 						</div>
 						<hr />
@@ -274,6 +288,10 @@
 							<label for="character-hp">HP:</label> 
 							<input type="text" id="character-hp" class="character-stats-input" />
 						</div>
+						<div class="">
+							<label for="character-ac">AC:</label> 
+							<input type="text" id="character-ac" class="character-stats-input" />
+						</div>
 						<hr/>
 						<div class="">
 							<label for="character-class">Class:</label> 
@@ -322,7 +340,16 @@
 			</div>
 			<div class="ui-screen-footer">
 				<div id="character-currency">
-					Currency - coming soon.
+					<h4>Currency</h4>
+					<div>
+						<label for="character-currency-gold">GP:</label>
+						<input class="width-20" id="character-currency-gold" />
+						<label for="character-currency-silver">SP:</labeL>
+						<input class="width-20" id="character-currency-silver" />
+					</div>
+					<div>
+						
+					</div>
 				</div>
 			</div>
 		</div>
@@ -339,8 +366,9 @@
 			<div class="ui-screen-body">
 				<h4>Available items:</h4>
 				<div id="trade-items-available-items">
-					Coming soon<!-- iniit in JS -->	
+					<!-- iniit in JS -->	
 				</div>
+				<div class="clearfix"></div>
 			</div>
 			<div class="ui-screen-footer">
 			</div>
@@ -404,9 +432,8 @@
 				var $diceValue = $('#dice-value');
 				var $personalNotes = $('#personal-notes');
 				var $chatName = $('#chat-box-name');
-				var $diceAnimation = $('#dice-rolling-animation');
 				var $inventoryItemsContainer = $('#character-inventory-items');
-				var $availableTradeItemsContainer = $('trade-items-available-items');
+				var $availableTradeItemsContainer = $('#trade-items-available-items');
 				var $onlinePlayersContainer = $('#online-players');
 
 				// local state
@@ -414,6 +441,7 @@
 				var nextEnemyId = 0;				// unique id for each enemy
 				var characterInventory = null;		// always points to an array (size is dynamic)
 				var inventoryItemIndex = 0;			// used to generate unique IDs for items
+				var tradeItems = null;				// array of items up for trade (local)
 
 				// socket to communicate with server
 				var socket = io("/dnd");	// io(...) specifies the namespace to connect to 
@@ -455,7 +483,6 @@
 							url:"/dnd/enemy",
 							method:"GET",
 							success:function(d) {
-								console.log(d);
 								currentEnemies = d.enemies;
 								updateEnemiesUI(d);
 							}, 
@@ -479,7 +506,6 @@
 				}
 
 				function updateDiceUI(params) {
-					$diceAnimation.css("display", "none");
 					$diceType.text(params.diceType);
 
 					if (params.rollValue) {
@@ -552,6 +578,7 @@
   					if (savedCharacterStats) {
   						$('#character-level').val(savedCharacterStats.level);
 	  					$('#character-hp').val(savedCharacterStats.hp);
+	  					$('#character-ac').val(savedCharacterStats.ac);
 						$('#character-class').val(savedCharacterStats.clss);
 						$('#character-str').val(savedCharacterStats.str);
 						$('#character-dex').val(savedCharacterStats.dex);
@@ -573,21 +600,91 @@
 					drawInventory(savedInventory);	// draw the inventory items to character screen
 				}
 
-				function initTradeItemsScreen() {
+				function initTradeItemsScreen(numTradable) {
+
+					// bind screen show on click
 					$('#tool-belt-trade-items, #trade-items-screen .pointer').on("click", function() {
 						$('#trade-items-screen').toggleClass("hidden");
 					});
+
+					// will always have numTradable number of slots
+					for (var i = 0; i < numTradable; i++) {
+						var tradeBox = document.createElement("div");
+						tradeBox.setAttribute("class", "trade-box pull-left width-20 text-center");
+						tradeBox.setAttribute("data-item-pos", i);
+
+						$availableTradeItemsContainer[0].appendChild(tradeBox);
+					}
+
+					tradeItems = new Array(numTradable);
+					
+					// bind drop event
+					$('.trade-box').droppable({
+						drop:function(e, ui) {
+							var targetPos = +e.target.getAttribute("data-item-pos");
+							var dragged = ui.draggable[0];
+
+							// this is what an item in tradeItems looks like
+							var itemAddedToTrade = {
+								"name": $(dragged).attr("title"),
+								"type": +$(dragged).attr("data-item-type"),
+								"notes": $(dragged).attr("data-content"),
+								"owner": storage.get("guid")
+							};
+
+							// if there is an item in this slot, take slot item
+							// and replace with your own
+							if (tradeItems[targetPos]) {
+								
+								// get the item info
+								var item = tradeItems[targetPos];
+
+								// if we could NOT add it to inventory
+								if (!addToAvailableInventorySlot(item)) {
+									alert("Oops! You have no available inventory slots!");
+									return;
+								} else {
+									// else we took it, notify server
+									socket.emit("trade items remove", {
+										"owner": item.owner,
+										"item-name": item.name,
+										"item-type": item.type,
+										"notes": item.notes
+									});
+								}
+							} else {
+								// else simply put the item in the empty slot and notify server
+								tradeItems[targetPos] = itemAddedToTrade;
+							}
+
+							// add your item to slot
+							tradeItems[targetPos] = itemAddedToTrade;
+							drawAvailableTradeItems(tradeItems);
+							socket.emit("trade items update", tradeItems);
+						}
+					});	
 				}
 
-				// really only called via socket.io events
+				// really only called via socket.io events (see event: trade items)
 				function drawAvailableTradeItems(items) {
-					// expects an array of items exactly the same as drawInventory
+					// expects an array of items the same as drawInventory, but with an extra "owner" field set to storage.get("guid")
 					$availableTradeItemsContainer.empty();
+					console.log($availableTradeItemsContainer)
 					for (var i = 0; i < items.length; i++) {
 						var tradeItem = document.createElement("div");
-						tradeItem.setAttribute("class", "inventory-box pull-left width-20 text-center");
-						// TODO
+						tradeItem.setAttribute("class", "trade-box pull-left width-20 text-center");
+
+						var tradeItemInner = document.createElement("div");
+						tradeItemInner.setAttribute("class", "trade-box-inner");
+						if (items[i]) {
+							tradeItemInner.appendChild(getIconForItemType(items[i].type));
+						}
+
+						tradeItem.appendChild(tradeItemInner);
+						$availableTradeItemsContainer[0].appendChild(tradeItem);
 					}
+
+					$('.trade-box-inner').popover().draggable({revert:'invalid'});
 				}
 
 				// returns a HTML DOM element (NOT JQ) with a correct item
@@ -613,10 +710,28 @@
 					return icon;
 				}
 
-				// adds item to user Inventory and redraws result
+				// adds item to user Inventory at a specified location and redraws result
 				function addInventoryItem(item, pos) {
 					characterInventory[pos] = item;
 					drawInventory(characterInventory);
+				}
+
+				function addToAvailableInventorySlot(item) {
+					// similar to addInventoryItem, but does so without
+					// requiring a slot to be specified
+					// returns true if added, false if there is no more space
+
+					for (index in characterInventory) {
+						if (!characterInventory[index]) {
+							// found an open slot
+							characterInventory[index] = item;
+							drawInventory(characterInventory);
+							return true;
+						}
+					}
+
+					// else no available slot
+					return false;
 				}
 
 				function drawInventory(inventory) {
@@ -636,6 +751,7 @@
 							itemContainer.setAttribute("data-toggle", "popover");
 							itemContainer.setAttribute("data-placement", "top");
 							itemContainer.setAttribute("data-trigger", "hover");
+							itemContainer.setAttribute("data-item-type", inventory[i].type);
 							itemContainer.setAttribute("data-content", inventory[i].notes);
 
 							// get icon for this inventory item
@@ -715,7 +831,15 @@
 							drawInventory(characterInventory);
 						}
 					});
-					$('.inventory-box-inner').popover().draggable({revert:'invalid'});
+					$('.inventory-box-inner').popover().draggable({
+						revert:'invalid',
+						start:function() {
+							$(this).css("z-index", 1000);
+						},
+						stop:function() {
+							$(this).css("z-index", 0);
+						}
+					});
 				}	
 
 				function saveLocalState() {
@@ -729,6 +853,7 @@
 					var currentStats = {};
 					currentStats.level = $('#character-level').val();
 					currentStats.hp = $('#character-hp').val();
+					currentStats.ac = $('#character-ac').val();
 					currentStats.clss = $('#character-class').val();
 					currentStats.str = $('#character-str').val();
 					currentStats.dex = $('#character-dex').val();
@@ -741,6 +866,10 @@
 
 					// inventory
 					storage.store("inventory", characterInventory);
+
+					// currency
+					storage.store("currency-gold", $('#character-currency-gold').val());
+					storage.store("currency-silver", $('#character-currency-silver').val());
 				}
 
 				var rollDice = function(max) {
@@ -757,6 +886,18 @@
 					// quickly get current state once
 					api.getEnemies();
 
+					// generate a random GUID for this player, if not already
+					if (!storage.get("guid")) {
+						function S4() {
+						    return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
+						}
+	 
+						// then to call it, plus stitch in '4' in the third group
+						var guid = (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+
+						storage.store("guid", guid);
+					}
+
 					// restore any locally persisted state
 					var notes = storage.get("notes");
 					if (notes) {
@@ -771,10 +912,11 @@
 
 					$chatName.val(name);
 
-					
+					$('#character-currency-gold').val(storage.get("currency-gold"));
+					$('#character-currency-silver').val(storage.get("currency-silver"));
 
 					// notify server of our existence
-					console.log("emitting join")
+					console.log("emitting join...")
 					socket.emit("join", {"name": name, "stats":storage.get("character-stats")});
 
 					// bind JS events
@@ -851,8 +993,6 @@
 					$('#dice-form').on("submit", function(e) {
 						e.preventDefault();
 
-						//$('#dice-rolling-animation').css("display", "inline-block");
-
 						var diceTypeRaw = $('#dice-input').val();
 						var diceType = diceTypeRaw.split("d");
 						var rollTimes = +diceType[0];
@@ -881,10 +1021,28 @@
 					// i.e. draggability, tooltips, etc
 					$('.draggable').draggable();
 
+					// shorthand buttons to roll more quickly 
+					$('.roll-dice-btn').on('click', function(e) {
+						e.preventDefault();
+
+						var diceTypeRaw = $(this).attr("data-dice-type");
+						var diceType = diceTypeRaw.split("d");
+						var rollTimes = +diceType[0];
+						var rollValues = [];
+
+						for (var i = 0; i < rollTimes; i++) {
+							rollValues.push(rollDice(diceType[1]));
+						}
+
+						api.updateDice({"diceType":diceTypeRaw, "rollValue": JSON.stringify(rollValues)});
+					});
+
+					// END events
+
+
 					// init UI
 					initCharacterScreen();	// stats and inventory
-					initTradeItemsScreen();
-					// TODO
+					//initTradeItemsScreen(5);
 
 					// socket io server-publish events!
 					// convention:
@@ -900,6 +1058,11 @@
 						updateDiceUI(dice);
 					});
 
+					socket.on("trade items", function(items) {
+						console.log("new items for trade!");
+						drawAvailableTradeItems(items);
+					});
+
 					socket.on("enemies update", function(enemies) {
 						console.log("updated enemies")
 						updateEnemiesUI(enemies);
@@ -908,6 +1071,26 @@
 					socket.on("players online", function(players) {
 						console.log("players changed");
 						updateOnlinePlayersUI(players);
+					});
+
+					socket.on("reconnect", function() {
+						console.log("reconnected!")
+						socket.emit("join", {"name":storage.get("name"), "stats":storage.get("character-stats")});
+					});
+
+					socket.on("trade items update", function(items) {
+						console.log("update to trade items");
+						tradeItems = items;
+						drawAvailableTradeItems(tradeItems);
+					});
+
+					socket.on("trade items update remove", function(itemRemoved) {
+						if (itemRemoved.owner == storage.get("guid")) {
+							// then it's our item that got removed
+
+							// should have a item id, use it to JQ search in inventory
+							// then simply traverse one level higher to get the data-item-pos to null out in characterInventory
+						}
 					});
 
 					// begin periodically saving state
