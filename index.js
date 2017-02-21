@@ -201,16 +201,16 @@ var billy = {
 	awaken:function() {
 		var numPlayers = 0;
 		var billyLines = [
-			"One step closer to getting my vengeance...", 
+			"One step closer to obtaining my vengeance...", 
 			"Another experience boost for me, Revenant Billy.",
 			"༼ ͒ ̶ ͒༽ I'm getting closer...",
 			"༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽",
 			"Hehe.",
 			"I don't even know why I killed that person (༼•̫͡•༽).",
-			"Wait who am I again? Oh right...",
+			"Wait who am I again? Oh yeah...",
 			"ROFL git gud gg noob.",
 			"My name is Billy.",
-			"Was his name Enrika? Oh... I remember Daiseh...",
+			"Was his name Enrika? I Forget. Oh right... I remember Daiseh...",
 			"Honey reminds me of a muscular man I once met...",
 			"I just wanted a new friend щ(ºДºщ) WHY U MAKE ME DO DIS??",
 			"((╬●∀●)",
