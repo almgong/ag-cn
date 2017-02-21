@@ -19,6 +19,9 @@ var fantasyNameGenerator = require('./lib/generators/FantasyNameGenerator.js');
 
 app.set('port', (process.env.PORT || 5000));
 
+// any controllers for DB access
+var playerController = require('./controllers/PlayerController.js');
+
 //static
 app.use('/static', express.static(__dirname + appPath + 'public'));
 app.use(express.static('public'));
@@ -192,52 +195,62 @@ dndIO.on("connection", function(socket) {
 });
 
 
-var billyIntervalTime = 600000;
-var billy = function() {
-	var numPlayers = 0;
-	var billyLines = [
-		"One step closer to getting my vengeance...", 
-		"Another experience boost for me, Revenant Billy.",
-		"༼ ͒ ̶ ͒༽ I'm getting closer...",
-		"༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽",
-		"Hehe.",
-		"I don't even know why I killed that person (༼•̫͡•༽).",
-		"Wait who am I again? Oh right...",
-		"ROFL git gud gg noob.",
-		"My name is Billy.",
-		"Was his name Enrika? Oh... I remember Daiseh...",
-		"Honey reminds me of a muscular man I once met...",
-		"I just wanted a new friend щ(ºДºщ) WHY U MAKE ME DO DIS??",
-		"((╬●∀●)",
-		"(•‿•)",
-		"Swag yolo 420 blaze it #billy #followmeoninstagram #blessed",
-		"That guy looked at me weird."
-	];
+var billy = {
+	"playerId": 1,					// see id in db
+	"awakenTimeInterval": 600000, 	// 600000
+	awaken:function() {
+		var numPlayers = 0;
+		var billyLines = [
+			"One step closer to getting my vengeance...", 
+			"Another experience boost for me, Revenant Billy.",
+			"༼ ͒ ̶ ͒༽ I'm getting closer...",
+			"༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽༼ ͒ ̶ ͒༽",
+			"Hehe.",
+			"I don't even know why I killed that person (༼•̫͡•༽).",
+			"Wait who am I again? Oh right...",
+			"ROFL git gud gg noob.",
+			"My name is Billy.",
+			"Was his name Enrika? Oh... I remember Daiseh...",
+			"Honey reminds me of a muscular man I once met...",
+			"I just wanted a new friend щ(ºДºщ) WHY U MAKE ME DO DIS??",
+			"((╬●∀●)",
+			"(•‿•)",
+			"Swag yolo 420 blaze it #billy #followmeoninstagram #blessed",
+			"That guy looked at me weird."
+		];
+		for (key in players) {
+			numPlayers++;
+		}
 
-	var line = billyLines[Math.floor(Math.random()*billyLines.length)];
-	for (key in players) {
-		numPlayers++;
+		if (numPlayers > 1) {
+			// add message to world chat for billy!
+			var victim = fantasyNameGenerator.generateCompleteFantasyName();
+			var expGained = Math.floor(Math.random()*1000);
+			var line = billyLines[Math.floor(Math.random()*billyLines.length)];
+
+			// send 3 messages at once
+			dndIO.emit("chat", 
+				[
+					{"message":"[Server] Billy has just slain (" + victim + ")."}, 
+					{"message": "[Server] Billy has gained " + expGained + " exp!"},
+					{"message":"(Billy) " + line}
+				]
+			);
+
+			// update db as needed
+			playerController.getPlayer(billy.playerId, function(player) {
+				player.experience += expGained;
+				playerController.savePlayer(player);
+			});
+			
+		}
+		
+		// wait at least 5 more minutes though
+		setTimeout(billy.awaken, Math.random()*billy.awakenTimeInterval + 300000);	
 	}
+};
 
-	if (numPlayers > 1) {
-		// add message to world chat for billy!
-		var victim = fantasyNameGenerator.generateCompleteFantasyName();
-		var expGained = Math.floor(Math.random()*1000);
-
-		// send 3 messages at once
-		dndIO.emit("chat", 
-			[
-				{"message":"[Server] Billy has just slain (" + victim + ")."}, 
-				{"message": "[Server] Billy has gained " + expGained + " exp!"},
-				{"message":"(Billy) " + line}
-			]
-		);
-	}
-
-	setTimeout(billy, Math.random()*billyIntervalTime + 300000);	// wait at least 5 more minutes though
-}
-
-setTimeout(billy, billyIntervalTime);
+setTimeout(billy.awaken, billy.awakenTimeInterval);
 
 
 
