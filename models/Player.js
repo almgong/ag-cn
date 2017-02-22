@@ -9,7 +9,7 @@ var DATABASE_URL = process.env.DATABASE_URL;
  *	any further filtering/organization, unless specified otherwise.
  *
  *	table(s) is/are in form:
- *		player: create table player(id, name, experience, hp, ac)	// will include all stats later
+ *		player: create table player(id, name, experience, hp, ac, level)	// will include all stats later
  *		owns_item: create table owns_item(player.id, item.id)
  *		item: create table item(id, item_name, damage)
 **/
@@ -20,8 +20,7 @@ exports.getPlayer = function(playerId, next) {
 	pg.connect(DATABASE_URL, function(err, client, done) {
 		if (err) {
 			console.log("Error in connecting to DB (getPlayer)...");
-			next(null);
-			return;
+			throw err;
 		}
 
 
@@ -30,8 +29,7 @@ exports.getPlayer = function(playerId, next) {
 			done();
 			if (err) {
 				console.log("Error in retrieiving player...");
-				next(null);
-				return;
+				throw err;
 			}	
 			
 			next(((result.rowCount > 0) ? result.rows : null));
@@ -64,8 +62,7 @@ exports.savePlayer = function(player, next) {
 	pg.connect(DATABASE_URL, function(err, client, done) {
 		if (err) {
 			console.log("Error in connecting to DB (savePlayer)...");
-			next(null);
-			return;	// these return statements are needed if the controllers do not return something (stops logic here)
+			throw err;
 		}
 
 		var q = "update player set";
@@ -82,8 +79,7 @@ exports.savePlayer = function(player, next) {
 			done();
 			if (err) {
 				console.log("Error in saving player...");
-				next();
-				return;
+				throw err;
 			}
 
 			next();	// notify caller that operation has completed

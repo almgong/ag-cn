@@ -211,7 +211,7 @@ var billy = {
 			"ROFL git gud gg noob.",
 			"My name is Billy.",
 			"Was his name Enrika? I Forget. Oh right... I remember Daiseh...",
-			"Honey reminds me of a muscular man I once met...",
+			"Hon3y reminds me of a muscular man I once met...",
 			"I just wanted a new friend щ(ºДºщ) WHY U MAKE ME DO DIS??",
 			"((╬●∀●)",
 			"(•‿•)",
@@ -222,7 +222,7 @@ var billy = {
 			numPlayers++;
 		}
 
-		if (numPlayers > 1) {
+		if (numPlayers > 2) {
 			// add message to world chat for billy!
 			var victim = fantasyNameGenerator.generateCompleteFantasyName();
 			var expGained = Math.floor(Math.random()*1000);
