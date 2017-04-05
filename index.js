@@ -192,6 +192,12 @@ dndIO.on("connection", function(socket) {
 	socket.on("trade items update remove", function(itemRemoved) {
 		socket.broadcast.emit("trade items update", itemRemoved);
 	});
+
+	// event: sound = when server receives this, a play-sound-command to broadcast to others except sender
+	// when clients receive this, they should play the sound denoted by the soundId
+	socket.on('sound', function(soundId) {
+		socket.broadcast.emit('sound', soundId);
+	});
 });
 
 
@@ -251,6 +257,22 @@ var billy = {
 };
 
 setTimeout(billy.awaken, billy.awakenTimeInterval);
+
+// endpoint that returns the asset file paths of all available sounds
+// for now we only have one pack, so we don't need to do anything funky
+// with recursively looking for sound files
+// TODO generalize this function
+app.get('/dnd/sounds', function(req, res) {
+	fs.readdir(__dirname + '/public/sounds/gameburp-WAV', function(err, files) {
+		var filenames = [];
+
+		for (var i = 0; i < files.length; i++) {
+			filenames.push("/static/sounds/gameburp-WAV/" + files[i])
+		}
+
+		res.json(filenames);
+	});
+});
 
 
 

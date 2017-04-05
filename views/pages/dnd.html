@@ -490,8 +490,64 @@
 								console.log("Could not get enemeies...");
 							}
 						});
+					},
+					getSounds:function() {
+						$.ajax({
+							url: "/dnd/sounds",
+							method: "GET",
+							success:function(data) {
+								for(var i = 0; i < data.length; i++) {
+									data[i] = encodeURI(data[i]);
+								}
+								loadSoundAssets(data);
+							},
+							error:function() {
+								console.log("Could not get sounds...");
+							}
+						})
 					}
 				};
+
+				// appends to the end of body <audio> elements
+				window.soundManager = {};
+				function loadSoundAssets(data) {
+					// temp, expose the soundManager (in the future it should be hidden i.e. without window)
+					window.soundManager.filenames = data;
+					window.soundManager.play = function(soundId) {
+						playSound(soundId);
+
+						// emit socket event so that everyone else hears the sound!
+						socket.emit('sound', soundId);
+					}
+
+					// iterate through returned list of file paths
+					// and construct audio elements into the page
+					for (var i = 0; i < data.length; i++) {
+						var audio = document.createElement('audio');
+						var source = document.createElement('source');
+						
+						var nameArr = data[i].split(".")
+
+						audio.id = "sound-" + i;
+						source.src = data[i];
+						source.type = 
+							"audio/" + (nameArr[nameArr.length-1]).toLowerCase();
+
+						audio.appendChild(source);
+						document.body.appendChild(audio);
+					}
+				}
+
+				// plays a sound identified by soundId to the current user
+				function playSound(soundId) {
+					var $audioElements = $('audio[id^="sound-"]');
+				
+					if (soundId < $audioElements.length) {
+						$audioElements[soundId].play();
+					} else {
+						console.log("This sound does not exist!");
+					}
+				}
 
 				function updateTeamChatUI(newMessages) {
 					for (var index = 0; index < newMessages.length; index++) {
@@ -877,14 +933,12 @@
 				};
 
 				var start = function() {
-					// really just a matter of setting intervals
-
-					// NEW used a coupled endpoint for both chat and dice
-					//setInterval(api.getAllState, 1200);
-
 			
 					// quickly get current state once
 					api.getEnemies();
+
+					// load sounds
+					api.getSounds();
 
 					// generate a random GUID for this player, if not already
 					if (!storage.get("guid")) {
@@ -1091,6 +1145,10 @@
 							// should have a item id, use it to JQ search in inventory
 							// then simply traverse one level higher to get the data-item-pos to null out in characterInventory
 						}
+					});
+
+					socket.on('sound', function(soundId) {
+						playSound(soundId);
 					});
 
 					// begin periodically saving state
